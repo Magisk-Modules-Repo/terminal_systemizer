@@ -102,7 +102,9 @@ mktouch() {
 }
 
 request_size_check() {
-  reqSizeM=`unzip -l "$1" 2>/dev/null | tail -n 1 | awk '{ print $1 }'`
+  #reqSizeM=`unzip -l "$1" 2>/dev/null | tail -n 1 | awk '{ print $1 }'`
+  detect_installed size
+  reqSizeM=$all_apk_size
   reqSizeM=$((reqSizeM / 1048576 + 1))
 }
 
@@ -299,6 +301,10 @@ fi
 # service mode scripts
 if $LATESTARTSERVICE; then
   cp -af $INSTALLER/common/service.sh $MODPATH/service.sh
+fi
+
+if [ -f $INSTALLER/common/aapt ]; then
+  cp -af $INSTALLER/common/aapt $MODPATH/aapt
 fi
 
 # CUSTOM - ReSystemize Apps

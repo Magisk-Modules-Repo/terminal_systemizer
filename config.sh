@@ -100,25 +100,32 @@ set_permissions() {
   # set_perm  $MODPATH/system/bin/dex2oat         0       2000    0755         u:object_r:dex2oat_exec:s0
   # set_perm  $MODPATH/system/lib/libart.so       0       0       0644
   set_perm $MODPATH/system/bin/systemize_magisk 0 0 0777
-  set_perm $MODPATH/system/xbin/aapt 0 0 0777
+  set_perm $MODPATH/aapt 0 0 0777
 }
 
 detect_installed() {
   no_app=0
   no_privapp=0
+  all_apk_size=0
   mkdir -p $TMPDIR/$MODID/system
   mkdir -p $TMPDIR/$MODID/system/app
   mkdir -p $TMPDIR/$MODID/system/priv-app
   if [ -d /magisk/$MODID/system/app ]; then
     for i in $(find /magisk/$MODID/system/app -name *.apk -type f); do
-      cp -af ${i%/*} $TMPDIR/$MODID/system/app
+	  if [ "$1" != "size" ]; then
+        cp -af ${i%/*} $TMPDIR/$MODID/system/app
+	  fi
+	  all_apk_size=$((all_apk_size+$(du $i | awk '{print $1}')))
     done
   else
     no_app=1
   fi
   if [ -d /magisk/$MODID/system/priv-app ]; then
     for i in $(find /magisk/$MODID/system/priv-app -name *.apk -type f); do
-      cp -af ${i%/*} $TMPDIR/$MODID/system/priv-app
+	  if [ "$1" != "size" ]; then
+        cp -af ${i%/*} $TMPDIR/$MODID/system/priv-app
+	  fi
+	  all_apk_size=$((all_apk_size+$(du $i | awk '{print $1}')))
     done
   else
     no_privapp=1

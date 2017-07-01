@@ -1,7 +1,7 @@
 id=terminal_systemizer
 name=Terminal Emulator App Systemizer
-version=v5
-versionCode=8
+version=v6
+versionCode=9
 author=veez21
 description=Turn apps to System Apps Systemlessly! (Using Terminal Emulator: systemize_magisk)
 template=3

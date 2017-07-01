@@ -18,12 +18,37 @@ set -x 2>$VERLOG
 
 #=========================== Set Busybox (Used by Magisk) up
 # > Do not touch!
-alias busybox=/data/magisk/busybox
-for i in $(busybox --list); do
-  if [ $i != 'echo' ]; then
-    alias $i="/data/magisk/busybox $i"
-  fi
-done
+if [ -f /data/magisk/busybox ]; then
+  alias busybox=/data/magisk/busybox
+  for i in $(busybox --list); do
+    if [ $i != 'echo' ]; then
+      alias $i="/data/magisk/busybox $i"
+    fi
+  done
+elif [ -f /data/data/com.topjohnwu.magisk/lib/libbusybox.so ]; then
+  cp /data/data/com.topjohnwu.magisk/lib/libbusybox.so /cache/busybox
+  chmod 755 /cache/busybox; chown 0.0 /cache/busybox
+  alias busybox=/cache/busybox
+  for i in $(busybox --list); do
+    if [ $i != 'echo' ]; then
+      alias $i="/cache/busybox $i"
+    fi
+  done  
+else
+  alias busybox=""
+fi
+if [ -x /system/xbin/busybox ]; then
+  true
+elif [ -x /system/bin/busybox ]; then
+  true
+elif [ -x /data/data/com.topjohnwu.magisk/busybox/busybox ]; then
+  export PATH=$PATH:/data/data/com.topjohnwu.magisk/busybox
+else
+  echo "! Busybox not detected.."
+  echo "Please install one (@osm0sis' busybox recommended)"
+  false
+fi
+[ $? -ne 0 ] && exit $?
 
 #=========================== Default Functions
 
@@ -60,12 +85,19 @@ runl() {
 #=========================== Default Variables
 # > Stuff here is used for some other stuff
 # > Edit only if necessary!
+
+# Magisk Mod Directory
 MODDIR="/magisk/$ID"
+# Version Number
 VER=$(get_file_prop version $MODDIR/module.prop)
+# Version Code
 REL=$(get_file_prop versionCode $MODDIR/module.prop)
+# Author
 AUTHOR=$(get_file_prop author $MODDIR/module.prop)
+# Mod Name/Title
 MODTITLE=$(get_file_prop name $MODDIR/module.prop)
-div="${Bl}$(printf '%*s' "$(($(echo $MODTITLE | wc -c)+$(echo $VER | wc -c)+$(echo $REL | wc -c)))" '' | tr ' ' =)${N}"
+
+# Colors
 G='\e[01;32m'    # GREEN
 R='\e[01;31m'    # RED
 Y='\e[01;33m'    # YELLOW
@@ -75,6 +107,9 @@ Bl='\e[01;30m'   # BLACK
 C='\e[01;36m'    # CYAN
 W='\e[01;37m'    # WHITE
 N='\e[00;37;40m' # How to use (example): echo "${G}example${N}"
+
+# Divider (based on $MODTITLE, $VER, and $REL characters)
+div="${Bl}$(printf '%*s' "$(($(echo $MODTITLE | wc -c)+$(echo $VER | wc -c)+$(echo $REL | wc -c)))" '' | sed 's/ /=/g')${N}"
 
 #=========================== Main
 # > You can start your MOD here.
@@ -95,7 +130,8 @@ sysapp=0
 privapp=0
 
 # Use aapt if present
-if [ -x /system/bin/aapt ] || [ -x /system/xbin/aapt ] || [ -x /sbin/aapt ]; then
+if [ -x /system/bin/aapt ] || [ -x /system/xbin/aapt ] || [ -x /sbin/aapt ] || [ -x $MODDIR/aapt ]; then
+  export PATH=$PATH:$MODDIR
   use_aapt=1
 fi
 
@@ -163,6 +199,7 @@ list_installed_apps() {
     if [[ ! "$(dumpsys package $i | grep system)" ]]; then
       app[$c]=${i##*/}
       package=${app[$c]}
+	  package[$c]=$package
       dir_app[$c]=/data/app/${app[$c]}-*/base.apk
       if [ $use_aapt == 1 ]; then
         app=$(aapt dump badging ${dir_app[$c]} | grep 'application-label:')
@@ -258,6 +295,56 @@ enter_apk_dir() {
   fi
 }
 
+enter_apk_name() {
+  echo "Enter the App Label of the installed app"
+  echo -n " > "
+  runl read apklabel
+  if [ ! "$apklabel" ]; then
+    echo "error"
+	exit 1
+  fi
+  echo "Checking if $apklabel is installed"
+  list_installed_apps 2>$LOG
+  c=1
+  for i in ${package[@]}; do
+    [ "$apklabel" == "$i" ] && {
+	  c=$((c+1))	
+	  break
+	} || {
+	  c=$((c+1))	
+	  false
+	}
+  done
+  if [ $? -eq 0 ]; then
+    echo " - OK"
+    runl echo "Checking APK size..."
+    sleep 0.3
+	dir_app=$(echo /data/app/${apklabel}-*/base.apk)
+    if [ $(du -m $dir_app | awk '{print $1}') -gt $free_space ]; then
+      runl echo " - Insufficient /magisk space!"
+	  runl echo " - APK size: $(du -m $dir_app | awk '{print $1}')M | /magisk Free: ${free_space}M"
+      runl echo " - Using magisk_merge.img to merge images..."
+      merge_img ${dir_app} 2>>$LOG
+    else
+      runl echo " - $(du -m $dir_app | awk '{print $1}')M"
+    fi
+	echo "Copying APK file of $apklabel"
+	mkdir -p $MODDIR/system/app/$apklabel
+	cp -af $dir_app $MODDIR/system/app/$apklabel
+	[ $? -ne 0 ] && echo "Failed!" && exit 1
+  else
+    echo "Failed!"
+	exit 1
+  fi
+  echo " - OK"
+  chown -R 0.0 $MODDIR/system/app/$apklabel
+  chmod 755 $MODDIR/system/app/$apklabel
+  chmod 644 $MODDIR/system/app/$apklabel/base.apk
+  echo "Done"
+  echo "Reboot device to apply changes"
+  exit
+}
+
 # Merge
 merge_img() {
   f_contexts='/magisk(/.*)? u:object_r:system_file:s0'
@@ -290,8 +377,9 @@ busybox mount -o remount,rw /magisk 2>/dev/null
 busybox mount -o rw,remount /magisk 2>/dev/null
 
 echo ""
-echo " 1 - Systemize Installed Apps"
-echo " 2 - Systemize given APK"
+echo " 1 - Systemize Installed Apps (Listed)"
+echo " 2 - Systemize Installed Apps (Enter label) "
+echo " 3 - Systemize given APK"
 echo " 0 - Exit"
 echo ""
 echo -n "[CHOICE]: "
@@ -333,7 +421,8 @@ if [ "$choice" == 1 ]; then
       runl echo "Checking APK size..."
       sleep 0.3
       if [ $(du -m $apkdir | awk '{print $1}') -gt $free_space ]; then
-        runl echo " - Insufficient /magisk space! APK size: $(du -m $apkdir | awk '{print $1}')M | /magisk Free: ${free_space}M"
+        runl echo " - Insufficient /magisk space!"
+		runl echo " - APK size: $(du -m $apkdir | awk '{print $1}')M | /magisk Free: ${free_space}M"
         runl echo " - Using magisk_merge.img to merge images..."
         merge_img $apkdir 2>>$LOG
       else
@@ -366,6 +455,10 @@ if [ "$choice" == 1 ]; then
     fi
   fi
 elif [ "$choice" == 2 ]; then
+  clear
+  runl enter_apk_name
+  runl exit $? 
+elif [ "$choice" == 3 ]; then
   clear
   runl enter_apk_dir
   runl exit $?
