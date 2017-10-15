@@ -128,6 +128,18 @@ echo "$div"
 use_aapt=0
 sysapp=0
 privapp=0
+perm_xml1=/system/etc/permissions/privapp-permissions-platform.xml
+perm_xml=$MODDIR/system/etc/permissions/privapp-permissions-platform.xml
+if [ -f $perm_xml1 ]; then patch_xml=true; else patch_xml=false; fi
+
+$patch_xml && {
+  if [ ! -f $perm_xml ]; then
+    mkdir -p $MODDIR/system/etc/permissions 2>/dev/null
+    cp $perm_xml1 $perm_xml
+    chmod -R 755 $MODDIR/system/etc/permissions
+    chmod 644 $perm_xml
+  fi
+}
 
 # Use aapt if present
 if [ -x /system/bin/aapt ] || [ -x /system/xbin/aapt ] || [ -x /sbin/aapt ] || [ -x $MODDIR/aapt ]; then
@@ -196,7 +208,7 @@ mount_image() {
 list_installed_apps() {
   c=1
   for i in $(ls /data/data); do
-    if [[ ! "$(dumpsys package $i | grep system)" ]]; then
+    if [[ ! "$(dumpsys package $i | grep system)" ]] && [[ ! "$(dumpsys package $i | grep "targetSdk=0")" ]]; then
       app[$c]=${i##*/}
       package=${app[$c]}
 	  package[$c]=$package
@@ -224,6 +236,29 @@ systemize() {
   runl chmod -R 755 ${MODDIR}${1}/${name}
   runl chmod 644 ${MODDIR}${1}/${name}/${apk}
   runl chown 0.0 ${MODDIR}${1}/${name}/${apk}
+  sleep 0.3
+  $patch_xml && {
+    echo "Patching $(basename $perm_xml)"
+    pp=0
+    #for i in $(dumpsys package $name | grep "android.permission."); do
+    for i in $(aapt d permissions $apkdir | awk '{print $2}'); do
+      pp=$((pp+1))
+      if [ $pp -ne 1 ]; then
+        #app_perm=${i%:*}
+        #app_perm[$pp]=$app_perm
+        app_perm=${i#*=}
+        app_perm[$pp]=$(echo $app_perm | tr -d "'")
+      fi
+    done
+    remove_this=$(grep -n "</permissions>" $perm_xml | tail -n1); remove_this=${remove_this%:*}
+    sed -i "${remove_this}d" $perm_xml
+    echo "\n    <privapp-permissions package=\"$name\">" >> $perm_xml
+    for i in ${app_perm[@]}; do
+      echo "        <permission name=\"$i\"/>" >> $perm_xml
+    done
+    echo "    <\privapp-permissions>" >> $perm_xml
+    echo "</permissions>" >> $perm_xml
+  }
   sleep 0.3
   runl echo "Reboot to apply changes"
   runl exit
@@ -328,18 +363,23 @@ enter_apk_name() {
     else
       runl echo " - $(du -m $dir_app | awk '{print $1}')M"
     fi
+    if [ -d /system/priv-app ]; then
+      installdir="priv-app"
+    else
+      installdir="app"
+    fi
 	echo "Copying APK file of $apklabel"
-	mkdir -p $MODDIR/system/app/$apklabel
-	cp -af $dir_app $MODDIR/system/app/$apklabel
+	mkdir -p $MODDIR/system/$installdir/$apklabel
+	cp -af $dir_app $MODDIR/system/$installdir/$apklabel
 	[ $? -ne 0 ] && echo "Failed!" && exit 1
   else
     echo "Failed!"
 	exit 1
   fi
   echo " - OK"
-  chown -R 0.0 $MODDIR/system/app/$apklabel
-  chmod 755 $MODDIR/system/app/$apklabel
-  chmod 644 $MODDIR/system/app/$apklabel/base.apk
+  chown -R 0.0 $MODDIR/system/${installdir}/$apklabel
+  chmod 755 $MODDIR/system/${installdir}/$apklabel
+  chmod 644 $MODDIR/system/${installdir}/$apklabel/base.apk
   echo "Done"
   echo "Reboot device to apply changes"
   exit
