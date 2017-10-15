@@ -4,4 +4,4 @@ version=v8.1
 versionCode=12
 author=veez21
 description=Turn apps to System Apps Systemlessly! (Using Terminal Emulator: systemize_magisk)
-template=3
+template=1400
