@@ -1,0 +1,37 @@
+Signature-Version: 1.0
+SHA1-Digest-Manifest: yFhu7TfSRdC5xHROIC9V6tAWGUk=
+Created-By: 1.0 (Android SignApk)
+
+Name: META-INF/com/google/android/updater-script
+SHA1-Digest-Manifest: pVUJ9D5th6d2sD8aeNp5zhiBUcs=
+
+Name: common/aapt
+SHA1-Digest-Manifest: 4YV2lGD67XGVdLvutrY2zgnZKf4=
+
+Name: module.prop
+SHA1-Digest-Manifest: d1o8Xh4zlQhHPsiHHPjH4eSCTEw=
+
+Name: system/bin/systemize_magisk
+SHA1-Digest-Manifest: ZwgNn+STGAH602ajyyEv4BzNm30=
+
+Name: META-INF/com/google/android/update-binary
+SHA1-Digest-Manifest: mMBZ4zsqG8nP6tBnQV1WIWkLU6g=
+
+Name: common/post-fs-data.sh
+SHA1-Digest-Manifest: SyX3X/PeDY9ntN8RXeBKc888YZg=
+
+Name: common/system.prop
+SHA1-Digest-Manifest: HbzvC3Tyik76s7nzWE6amQuJyXg=
+
+Name: common/service.sh
+SHA1-Digest-Manifest: TOn/zXTfuf86lkAJLKXrKctujsY=
+
+Name: config.sh
+SHA1-Digest-Manifest: Njo4oCmhgcNamoN0Pf2sqlreJbU=
+
+Name: README.md
+SHA1-Digest-Manifest: 1uh3o9lGFi6E4LlfBM86xz+XrPo=
+
+Name: common/file_contexts_image
+SHA1-Digest-Manifest: d0Z/GcKeayRQbW+lqq5Fe4Ncjps=
+
