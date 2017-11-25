@@ -139,6 +139,7 @@ else
 fi
 $BOOTMODE && ! is_mounted /magisk && abort "! Magisk is not activated!"
 [ ! -f $SYSTEM/build.prop ] && abort "! $SYSTEM could not be mounted!"
+$BOOTMODE && abort "! Please install in recovery"
 
 # Detect version and architecture
 api_level_arch_detect
