@@ -33,7 +33,9 @@ elif [ -f /data/data/com.topjohnwu.magisk/lib/libbusybox.so ]; then
     if [ $i != 'echo' ]; then
       alias $i="/cache/busybox $i"
     fi
-  done  
+  done
+elif [ -d /sbin/.core/busybox ]; then
+  PATH=$PATH:/sbin/.core/busybox
 else
   alias busybox=""
 fi
@@ -88,6 +90,14 @@ runl() {
 
 # Magisk Mod Directory
 MODDIR="/magisk/$ID"
+if [ ! -d $MODDIR ]; then
+  if [ -d /sbin/.core/img/$ID ]; then
+    MODDIR=/sbin/.core/img/$ID
+  else
+    echo "Module not detected!"
+    exit 1
+  fi
+fi
 # Version Number
 VER=$(get_file_prop version $MODDIR/module.prop)
 # Version Code
