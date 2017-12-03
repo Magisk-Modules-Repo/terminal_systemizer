@@ -8,16 +8,31 @@
 ID="terminal_systemizer"
 
 #=========================== Set Log Files
+mount -o remount,rw /cache 2>/dev/null
+mount -o rw,remount /cache 2>/dev/null
 # > Logs should go in this file
-LOG=/magisk/${ID}/terminal.log
+LOG=/cache/${ID}.log
 # > Verbose output goes here
-VERLOG=/magisk/${ID}/verbose.log
+VERLOG=/cache/${ID}-verbose.log
 
 #=========================== Start Logging verbosely
 set -x 2>$VERLOG
 
+#=========================== Determine if A/B OTA device
+#ABDeviceCheck=$(cat /proc/cmdline | grep slot_suffix | wc -l)
+if [ -d /system_root ]; then
+  isABDevice=true
+  SYSTEM=/system_root/system
+  SYSTEM2=/system
+else
+  isABDevice=false
+  SYSTEM=/system
+  SYSTEM2=/system
+fi
+
 #=========================== Set Busybox (Used by Magisk) up
 # > Do not touch!
+_busybox=false
 if [ -f /data/magisk/busybox ]; then
   alias busybox=/data/magisk/busybox
   for i in $(busybox --list); do
@@ -25,6 +40,7 @@ if [ -f /data/magisk/busybox ]; then
       alias $i="/data/magisk/busybox $i"
     fi
   done
+  _busybox=true
 elif [ -f /data/data/com.topjohnwu.magisk/lib/libbusybox.so ]; then
   cp /data/data/com.topjohnwu.magisk/lib/libbusybox.so /cache/busybox
   chmod 755 /cache/busybox; chown 0.0 /cache/busybox
@@ -34,17 +50,21 @@ elif [ -f /data/data/com.topjohnwu.magisk/lib/libbusybox.so ]; then
       alias $i="/cache/busybox $i"
     fi
   done
+  _busybox=true
 elif [ -d /sbin/.core/busybox ]; then
   PATH=$PATH:/sbin/.core/busybox
+  _busybox=true
 else
   alias busybox=""
 fi
-if [ -x /system/xbin/busybox ]; then
+if [ -x $SYSTEM/xbin/busybox ]; then
   true
-elif [ -x /system/bin/busybox ]; then
+elif [ -x $SYSTEM/bin/busybox ]; then
   true
 elif [ -x /data/data/com.topjohnwu.magisk/busybox/busybox ]; then
   export PATH=$PATH:/data/data/com.topjohnwu.magisk/busybox
+elif [ $_busybox ]; then
+  true
 else
   echo "! Busybox not detected.."
   echo "Please install one (@osm0sis' busybox recommended)"
@@ -138,24 +158,24 @@ echo "$div"
 use_aapt=0
 sysapp=0
 privapp=0
-perm_xml1=/system/etc/permissions/privapp-permissions-platform.xml
-perm_xml=$MODDIR/system/etc/permissions/privapp-permissions-platform.xml
+perm_xml1=$SYSTEM/etc/permissions/privapp-permissions-platform.xml
+perm_xml=$MODDIR$SYSTEM2/etc/permissions/privapp-permissions-platform.xml
 if [ -f $perm_xml1 ]; then patch_xml=true; else patch_xml=false; fi
-mkdir -p $MODDIR/system/etc/permissions 2>/dev/null
+mkdir -p $MODDIR$SYSTEM2/etc/permissions 2>/dev/null
 
 # Use aapt if present
-if [ -x /system/bin/aapt ] || [ -x /system/xbin/aapt ] || [ -x /sbin/aapt ] || [ -x $MODDIR/aapt ]; then
+if [ -x $SYSTEM/bin/aapt ] || [ -x $SYSTEM/xbin/aapt ] || [ -x /sbin/aapt ] || [ -x $MODDIR/aapt ]; then
   export PATH=$PATH:$MODDIR
   use_aapt=1
 fi
 
 # Detect if /system/app is available
-if [ -d /system/app ]; then
+if [ -d $SYSTEM/app ]; then
   sysapp=1
 fi
 
 # Detect if /system/priv-app is available
-if [ -d /system/priv-app ]; then
+if [ -d $SYSTEM/priv-app ]; then
   privapp=1
 fi
 
@@ -191,10 +211,10 @@ mount_image() {
         if [ "$?" -eq "0" ]; then
           mount -t ext4 -o loop $LOOPDEVICE $2
           if (! is_mounted $2); then
-            /system/bin/toolbox mount -t ext4 -o loop $LOOPDEVICE $2
+            $SYSTEM/bin/toolbox mount -t ext4 -o loop $LOOPDEVICE $2
           fi
           if (! is_mounted $2); then
-            /system/bin/toybox mount -t ext4 -o loop $LOOPDEVICE $2
+            $SYSTEM/bin/toybox mount -t ext4 -o loop $LOOPDEVICE $2
           fi
         fi
         if (is_mounted $2); then
@@ -210,7 +230,7 @@ mount_image() {
 list_installed_apps() {
   c=1
   for i in $(ls /data/data); do
-    if [[ ! "$(dumpsys package $i | grep system)" ]] && [[ ! "$(dumpsys package $i | grep "targetSdk=0")" ]]; then
+    if [[ ! "$(dumpsys package $i | grep '/system')" ]] && [[ ! "$(dumpsys package $i | grep "targetSdk=0")" ]]; then
       app[$c]=${i##*/}
       package=${app[$c]}
 	  package[$c]=$package
@@ -229,7 +249,7 @@ list_installed_apps() {
 systemize() {
   runl echo "Transfering ${apk}($name) to '$1'..."
   sleep 0.3
-  if [ -d /system/app/${name} ] || [ -d /system/priv-app/${name} ] || [ -d $MODDIR/system/app/${name} ] || [ -d $MODDIR/system/priv-app/${name} ]; then
+  if [ -d $SYSTEM/app/${name} ] || [ -d $SYSTEM/priv-app/${name} ] || [ -d $MODDIR$SYSTEM2/app/${name} ] || [ -d $MODDIR$SYSTEM2/priv-app/${name} ]; then
     runl echo "App exists!"
     runl exit 5
   fi
@@ -255,17 +275,17 @@ echo "Granting Permissions"
     done
 echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
 <permissions>
-  <privapp-permissions package=\"com.package.name\">" >> $MODDIR/system/etc/permissions/privapp-permissions-${name}.xml
+  <privapp-permissions package=\"com.package.name\">" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
 
 
 for i in ${app_perm[@]}; do
-      echo "        <permission name=\"$i\"/>" >> $MODDIR/system/etc/permissions/privapp-permissions-${name}.xml
+      echo "        <permission name=\"$i\"/>" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
 done
 
 echo "  </privapp-permissions>
-</permissions>" >> $MODDIR/system/etc/permissions/privapp-permissions-${name}.xml
+</permissions>" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
 
-chmod 644 $MODDIR/system/etc/permissions/privapp-permissions-${name}.xml
+chmod 644 $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
 
 }
 
@@ -312,7 +332,7 @@ enter_apk_dir() {
       sleep 0.3
       if [ $privapp == 1 ] && [ $sysapp == 1 ]; then 
         echo "Where to install?"
-        echo -n "< 1 - /system/app | 2 - /system/priv-app > : "
+        echo -n "< 1 - $SYSTEM/app | 2 - $SYSTEM/priv-app > : "
         read loc
         if [ "$loc" == 1 ]; then
           systemize /system/app
@@ -373,23 +393,23 @@ enter_apk_name() {
     else
       runl echo " - $(du -m $dir_app | awk '{print $1}')M"
     fi
-    if [ -d /system/priv-app ]; then
+    if [ -d $SYSTEM/priv-app ]; then
       installdir="priv-app"
     else
       installdir="app"
     fi
 	echo "Copying APK file of $apklabel"
-	mkdir -p $MODDIR/system/$installdir/$apklabel
-	cp -af $dir_app $MODDIR/system/$installdir/$apklabel
+	mkdir -p $MODDIR$SYSTEM2/$installdir/$apklabel
+	cp -af $dir_app $MODDIR$SYSTEM2/$installdir/$apklabel
 	[ $? -ne 0 ] && echo "Failed!" && exit 1
   else
     echo "Failed!"
 	exit 1
   fi
   echo " - OK"
-  chown -R 0.0 $MODDIR/system/${installdir}/$apklabel
-  chmod 755 $MODDIR/system/${installdir}/$apklabel
-  chmod 644 $MODDIR/system/${installdir}/$apklabel/base.apk
+  chown -R 0.0 $MODDIR$SYSTEM2/${installdir}/$apklabel
+  chmod 755 $MODDIR$SYSTEM2/${installdir}/$apklabel
+  chmod 644 $MODDIR$SYSTEM2/${installdir}/$apklabel/base.apk
   echo "Done"
   echo "Reboot device to apply changes"
   exit
@@ -516,7 +536,7 @@ if [ "$choice" == 1 ]; then
       sleep 0.3
       if [ $privapp == 1 ] && [ $sysapp == 1 ]; then 
         echo "Where to install?"
-        echo -n "< 1 - /system/app | 2 - /system/priv-app > : "
+        echo -n "< 1 - $SYSTEM/app | 2 - $SYSTEM/priv-app > : "
         read loc
         if [ "$loc" == 1 ]; then
           systemize /system/app
