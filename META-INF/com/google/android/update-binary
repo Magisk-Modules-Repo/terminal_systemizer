@@ -139,7 +139,7 @@ else
 fi
 $BOOTMODE && ! is_mounted /magisk && abort "! Magisk is not activated!"
 [ ! -f $SYSTEM/build.prop ] && abort "! $SYSTEM could not be mounted!"
-$BOOTMODE && abort "! Please install in recovery"
+$BOOTMODE && ui_print "! Please install in recovery"
 
 # Detect version and architecture
 api_level_arch_detect
@@ -173,6 +173,7 @@ fi
 ui_print "- Mounting $IMG to $MOUNTPATH"
 MAGISKLOOP=`$MAGISKBIN/magisk --mountimg $IMG $MOUNTPATH`
 is_mounted $MOUNTPATH || abort "! $IMG mount failed..."
+detect_installed
 
 if [ "$(cat $MODPATH/module.prop)" == "$(cat $INSTALLER/module.prop)" ]; then
   ACTION="Uninstall"
@@ -189,7 +190,6 @@ if [ "$ACTION" == "Install" ]; then
   # Copy files
   ui_print "- Copying files"
   unzip -o "$ZIP" 'system/*' -d $MODPATH 2>/dev/null
-  unzip -o "$ZIP" 'wget' -d $MODPATH 2>/dev/null
 
   # Handle replace folders
   for TARGET in $REPLACE; do
