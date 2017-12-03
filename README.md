@@ -3,6 +3,6 @@ Systemize your App systemlessly!
 Using terminal emulator.
 Enter this command and choose the app you want to systemize.
 
-	systemize_magisk
+	systemize
 	
 And Reboot to apply changes.
