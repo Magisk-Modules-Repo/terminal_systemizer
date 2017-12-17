@@ -182,8 +182,8 @@ if [ -d $SYSTEM/priv-app ]; then
 fi
 
 # /magisk free space
-free_space="$(df -m /magisk | tail -n1 | awk '{print $4}')"
-total_space="$(df -m /magisk | tail -n1 | awk '{print $2}')"
+free_space="$(busybox df -m /magisk | tail -n1 | awk '{print $4}')"
+total_space="$(busybox df -m /magisk | tail -n1 | awk '{print $2}')"
 
 is_mounted() {
   if [ ! -z "$2" ]; then
