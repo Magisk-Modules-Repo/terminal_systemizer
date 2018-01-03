@@ -232,7 +232,7 @@ mount_image() {
 list_installed_apps() {
   c=1
   for i in $(ls /data/data); do
-    if [[ ! "$(dumpsys package $i | grep '/system')" ]] && [[ ! "$(dumpsys package $i | grep "targetSdk=0")" ]]; then
+    if [[ ! "$(dumpsys package $i | grep 'codePath=/system')" ]] && [[ ! "$(dumpsys package $i | grep "targetSdk=0")" ]]; then
       app[$c]=${i##*/}
       package=${app[$c]}
 	  package[$c]=$package
@@ -277,7 +277,7 @@ echo "Granting Permissions"
     done
 echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
 <permissions>
-  <privapp-permissions package=\"com.package.name\">" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
+  <privapp-permissions package=\"${name}\">" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
 
 
 for i in ${app_perm[@]}; do
