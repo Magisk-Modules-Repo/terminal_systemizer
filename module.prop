@@ -1,7 +1,7 @@
 id=terminal_systemizer
-name=Terminal Emulator App Systemizer
-version=v9.3
-versionCode=24
+name=App Systemizer (Terminal Emulator) 
+version=v10
+versionCode=25
 author=veez21
-description=Turn apps to System Apps Systemlessly! (Using Terminal Emulator: systemize)
+description=Turn apps to System Apps Systemlessly! Supports all device running Magisk.
 minMagisk=1500
