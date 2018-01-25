@@ -25,3 +25,5 @@
 * Rename *_*
 ### v10.1
 * Fixed APK label option
+* Fix magisk_merge.img issues on A/B devices
+* Use util_functions.sh
