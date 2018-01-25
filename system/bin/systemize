@@ -7,6 +7,11 @@
 # > ENTER MAGISK MODULE ID HERE
 ID="terminal_systemizer"
 
+#=========================== Check root
+echo "test root" > /data/local/tmp/temp 2>/dev/null >/dev/null
+_name=$0; _name=${_name##*/}
+[ $? -ne 0 ] && echo "$_name needs to be in a root shell!" && echo "type 'su' then '$_name'" && exit 1
+
 #=========================== Set Log Files
 mount -o remount,rw /cache 2>/dev/null
 mount -o rw,remount /cache 2>/dev/null
@@ -78,27 +83,12 @@ fi
 
 #=========================== Default Functions
 
-# get_file_prop <property> <prop.file>
-get_file_prop() {
-  _prop=$(grep "$1=" $2)
-  echo ${_prop#*=}
-  unset _prop
-}
+# Import util_functions.sh
+[ -f /data/adb/magisk/util_functions.sh ] && . /data/adb/magisk/util_functions.sh || exit 1
 
 # set_file_prop <property> <value> <prop.file>
 set_file_prop() {
   sed -i "s/${1}=.*/${1}=${2}/g" $3
-}
-
-# mktouch <file dir> <content>
-mktouch() { 
-  mkdir -p ${1%/*}
-  if [ -z "$2" ]; then
-    touch $1
-  else
-    echo $2 > $1
-  fi
-  chmod 644 $1
 }
 
 #=========================== Default Variables
@@ -122,13 +112,13 @@ if [ ! -d $MODDIR ]; then
   fi
 fi
 # Version Number
-VER=$(get_file_prop version $MODDIR/module.prop)
+VER=$(grep_prop version $MODDIR/module.prop)
 # Version Code
-REL=$(get_file_prop versionCode $MODDIR/module.prop)
+REL=$(grep_prop versionCode $MODDIR/module.prop)
 # Author
-AUTHOR=$(get_file_prop author $MODDIR/module.prop)
+AUTHOR=$(grep_prop author $MODDIR/module.prop)
 # Mod Name/Title
-MODTITLE=$(get_file_prop name $MODDIR/module.prop)
+MODTITLE=$(grep_prop name $MODDIR/module.prop)
 
 # Colors
 G='\e[01;32m'    # GREEN
@@ -142,7 +132,7 @@ W='\e[01;37m'    # WHITE
 N='\e[00;37;40m' # How to use (example): echo "${G}example${N}"
 
 # Divider (based on $MODTITLE, $VER, and $REL characters)
-div="${Bl}$(printf '%*s' "$(($(echo $MODTITLE | wc -c)+$(echo $VER | wc -c)+$(echo $REL | wc -c)))" '' | sed 's/ /=/g')${N}"
+div="${Bl}$(printf '%*s' "$(($(echo $MODTITLE | wc -c)+$(echo $VER | wc -c)+$(echo $REL | wc -c)))" '' | tr "[a-zA-Z0-9]" '=')${N}"
 
 #=========================== Main
 # > You can start your MOD here.
@@ -198,40 +188,6 @@ is_mounted() {
   return $?
 }
 
-mount_image() {
-  if [ ! -d "$2" ]; then
-    mount -o rw,remount rootfs /
-    mkdir -p $2 2>/dev/null
-    ($BOOTMODE) && mount -o ro,remount rootfs /
-    [ ! -d "$2" ] && return 1
-  fi
-  if (! is_mounted $2); then
-    LOOPDEVICE=
-    for LOOP in 0 1 2 3 4 5 6 7; do
-      if (! is_mounted $2); then
-        LOOPDEVICE=/dev/block/loop$LOOP
-        if [ ! -f "$LOOPDEVICE" ]; then
-          mknod $LOOPDEVICE b 7 $LOOP 2>/dev/null
-        fi
-        losetup $LOOPDEVICE $1
-        if [ "$?" -eq "0" ]; then
-          mount -t ext4 -o loop $LOOPDEVICE $2
-          if (! is_mounted $2); then
-            $SYSTEM/bin/toolbox mount -t ext4 -o loop $LOOPDEVICE $2
-          fi
-          if (! is_mounted $2); then
-            $SYSTEM/bin/toybox mount -t ext4 -o loop $LOOPDEVICE $2
-          fi
-        fi
-        if (is_mounted $2); then
-          log_print "- Mounting $1 to $2"
-          break;
-        fi
-      fi
-    done
-  fi
-}
-
 # List installed apps
 list_installed_apps() {
   c=1
@@ -252,7 +208,14 @@ list_installed_apps() {
 }
 
 # Systemize function
+# Usage: systemize <install directory> <apk directory>
 systemize() {
+  if [ "$2" ]; then
+    apkdir="$2"
+    apk=${apkdir##*/}
+    name=${apkdir%/*}; name=${name##*/}
+    name=$(echo $name | tr -d ' ' | tr -d "'" | tr -d '*' | tr -d '-')
+  fi
   echo "Transfering ${apk}($name) to '$1'..."
   sleep 0.3
   if [ -d $SYSTEM/app/${name} ] || [ -d $SYSTEM/priv-app/${name} ] || [ -d $MODDIR$SYSTEM2/app/${name} ] || [ -d $MODDIR$SYSTEM2/priv-app/${name} ]; then
@@ -269,12 +232,9 @@ systemize() {
   $patch_xml && {
     echo "Granting Permissions"
     pp=0
-    #for i in $(dumpsys package $name | grep "android.permission."); do
     for i in $(aapt d permissions $apkdir | awk '{print $2}'); do
       pp=$((pp+1))
       if [ $pp -ne 1 ]; then
-        #app_perm=${i%:*}
-        #app_perm[$pp]=$app_perm
         app_perm=${i#*=}
         app_perm[$pp]=$(echo $app_perm | tr -d "'")
       fi
@@ -282,25 +242,20 @@ systemize() {
     echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
 <permissions>
   <privapp-permissions package=\"${name}\">" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
-
-
     for i in ${app_perm[@]}; do
       echo "        <permission name=\"$i\"/>" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
-done
-
-      echo "  </privapp-permissions>
+    done
+    echo "  </privapp-permissions>
 </permissions>" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
+    chmod 644 $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
 
-      chmod 644 $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
-
-}
+  }
 
   sleep 0.3
   echo "Reboot to apply changes"
   exit
 }
 
-# APK systemizer function
 enter_apk_dir() {
   echo -n "Enter APK Path:"
   read apkdir
@@ -404,83 +359,63 @@ enter_apk_name() {
     else
       installdir="app"
     fi
-	echo "Copying APK file of $apklabel"
-	mkdir -p $MODDIR$SYSTEM2/$installdir/$apklabel
-	cp -af $dir_app $MODDIR$SYSTEM2/$installdir/$apklabel
+	systemize $MODDIR$SYSTEM2/$installdir $dir_app
 	[ $? -ne 0 ] && echo "Failed!" && exit 1
   else
     echo "Failed!"
     exit 1
   fi
-  echo " - OK"
-  chown -R 0.0 $MODDIR$SYSTEM2/${installdir}/$apklabel
-  chmod 755 $MODDIR$SYSTEM2/${installdir}/$apklabel
-  chmod 644 $MODDIR$SYSTEM2/${installdir}/$apklabel/base.apk
-  echo "Done"
-  echo "Reboot device to apply changes"
-  exit
 }
 
 revert_apps() {
-echo "$div"
-echo "Revert"
-echo "$div"
-echo ""
-echo "Loading..."
-cc=1
-for i in $(find $MODDIR -name "*.apk"); do
-  rev_dir[$cc]=${i%/*}
-  rev_label=${i%/*}
-  rev_label[$cc]=${rev_label##*/}
-  echo " $cc - ${rev_label[$cc]}"
-  cc=$((cc+1))
-done
-echo ""
-echo " 0 -  Exit"
-echo -n "[CHOICE]: "
-read revert
-if [ "$revert" -gt ${#rev_label[@]} ] || [ "$revert" -lt 0 ] || [ "$revert" == "" ] || [ -n "$(echo $revert | tr -d '0-9')" ] ; then
-  echo "Invalid!"
-  exit 1
-elif [ "$revert" == 0 ]; then
-  exit
-else
-  echo "Reverting ${rev_label[$revert]}..."
-  rm -rf ${rev_dir[$revert]}
-  echo "Done! Reboot to apply changes"
-  exit
-fi
+  echo "$div"
+  echo "Revert"
+  echo "$div"
+  echo ""
+  echo "Loading..."
+  cc=1
+  for i in $(find $MODDIR -name "*.apk"); do
+    rev_dir[$cc]=${i%/*}
+    rev_label=${i%/*}
+    rev_label[$cc]=${rev_label##*/}
+    echo " $cc - ${rev_label[$cc]}"
+    cc=$((cc+1))
+  done
+  echo ""
+  echo " 0 -  Exit"
+  echo -n "[CHOICE]: "
+  read revert
+  if [ "$revert" -gt ${#rev_label[@]} ] || [ "$revert" -lt 0 ] || [ "$revert" == "" ] || [ -n "$(echo $revert | tr -d '0-9')" ] ; then
+    echo "Invalid!"
+    exit 1
+  elif [ "$revert" == 0 ]; then
+    exit
+  else
+    echo "Reverting ${rev_label[$revert]}..."
+    rm -rf ${rev_dir[$revert]}
+    echo "Done! Reboot to apply changes"
+    exit
+  fi
 }
 
 # Merge
 merge_img() {
-  f_contexts='/magisk(/.*)? u:object_r:system_file:s0'
   apk_size=$(($(du -m $1 | awk '{print $1}')+2))
-  if [ "$(get_file_prop minMagisk $MODDIR/module.prop)" -ge "1500" ]; then
-    merge_img=/data/adb/magisk_merge.img
+  if [ "$(grep_prop minMagisk $MODDIR/module.prop)" -ge "1500" ]; then
+    IMG=/data/adb/magisk_merge.img
   else
-    merge_img=/data/magisk_merge.img
+    IMG=/data/magisk_merge.img
   fi
   install_dir=/dev/tmp/${ID}
   path=/dev/magisk_merge
   tmpmodpath=$path/${ID}
-  
   mkdir -p $install_dir
-  
-  SIZE=$((apk_size/32*32+64))
-  echo "$f_contexts" > $install_dir/file_contexts_image
-  make_ext4fs -l ${SIZE}M -a /magisk -S $install_dir/file_contexts_image $merge_img >> $LOG
-  
-  mount_image $merge_img $path
-  if ! is_mounted $path; then
-    echo "magisk_merge.img not mounted!"
-    exit 1
-  fi
-  
+  reqSizeM=$apk_size
+  MOUNTPATH=$path
+  mount_magisk_img  
   cp -af $MODDIR/. $tmpmodpath
   MODDIR=$tmpmodpath
 }
-
 
 mount -o remount,rw $MOUNTPATH 2>/dev/null
 mount -o rw,remount $MOUNTPATH 2>/dev/null

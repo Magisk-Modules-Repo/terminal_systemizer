@@ -23,3 +23,5 @@
 * Changed some hardcoded variables
 * Display Busybox info
 * Rename *_*
+### v10.1
+* Fixed APK label option
