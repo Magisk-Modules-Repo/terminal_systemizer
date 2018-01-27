@@ -41,7 +41,7 @@ set_busybox() {
   if [ -x "$1" ]; then
     for i in $(${1} --list); do
       if [ "$i" != 'echo' ]; then
-        alias "$i"="${1} $i"
+        alias "$i"="${1} $i" 2>>$LOG >>$LOG
       fi
     done
     _busybox=true
@@ -83,9 +83,6 @@ fi
 
 #=========================== Default Functions
 
-# Import util_functions.sh
-[ -f /data/adb/magisk/util_functions.sh ] && . /data/adb/magisk/util_functions.sh || exit 1
-
 # set_file_prop <property> <value> <prop.file>
 set_file_prop() {
   sed -i "s/${1}=.*/${1}=${2}/g" $3
@@ -111,6 +108,10 @@ if [ ! -d $MODDIR ]; then
     exit 1
   fi
 fi
+
+# Import util_functions.sh
+[ -f /data/adb/magisk/util_functions.sh ] && . /data/adb/magisk/util_functions.sh || exit 1
+
 # Version Number
 VER=$(grep_prop version $MODDIR/module.prop)
 # Version Code
@@ -132,7 +133,7 @@ W='\e[01;37m'    # WHITE
 N='\e[00;37;40m' # How to use (example): echo "${G}example${N}"
 
 # Divider (based on $MODTITLE, $VER, and $REL characters)
-div="${Bl}$(printf '%*s' "$(($(echo $MODTITLE | wc -c)+$(echo $VER | wc -c)+$(echo $REL | wc -c)))" '' | tr "[a-zA-Z0-9]" '=')${N}"
+div="${Bl}$(printf '%*s' "$(($(echo $MODTITLE | wc -c)+$(echo $VER | wc -c)+$(echo $REL | wc -c)))" '' | tr " " '=')${N}"
 
 #=========================== Main
 # > You can start your MOD here.
