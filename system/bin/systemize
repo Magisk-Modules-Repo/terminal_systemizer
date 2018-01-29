@@ -8,8 +8,8 @@
 ID="terminal_systemizer"
 
 #=========================== Check root
-echo "test root" > /data/local/tmp/temp 2>/dev/null >/dev/null
 _name=$0; _name=${_name##*/}
+echo "test root" > /data/local/tmp/temp 2>/dev/null >/dev/null
 [ $? -ne 0 ] && echo "$_name needs to be in a root shell!" && echo "type 'su' then '$_name'" && exit 1
 
 #=========================== Set Log Files
