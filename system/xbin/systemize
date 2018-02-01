@@ -1,0 +1,567 @@
+#!/system/bin/sh
+# Terminal Magisk Mod Template
+# by veez21 @ xda-developers
+
+
+# Magisk Module ID **
+# > ENTER MAGISK MODULE ID HERE
+ID="terminal_systemizer"
+
+#=========================== Check root
+_name=$0; _name=${_name##*/}
+echo "test root" > /data/local/tmp/temp 2>/dev/null >/dev/null
+[ $? -ne 0 ] && echo "$_name needs to be in a root shell!" && echo "type 'su' then '$_name'" && exit 1
+
+#=========================== Set Log Files
+mount -o remount,rw /cache 2>/dev/null
+mount -o rw,remount /cache 2>/dev/null
+# > Logs should go in this file
+LOG=/cache/${ID}.log
+# > Verbose output goes here
+VERLOG=/cache/${ID}-verbose.log
+
+#=========================== Start Logging verbosely
+set -x 2>$VERLOG
+
+#=========================== Determine if A/B OTA device
+#ABDeviceCheck=$(cat /proc/cmdline | grep slot_suffix | wc -l)
+if [ -d /system_root ]; then
+  isABDevice=true
+  SYSTEM=/system_root/system
+  SYSTEM2=/system
+else
+  isABDevice=false
+  SYSTEM=/system
+  SYSTEM2=/system
+fi
+
+#=========================== Set Busybox (Used by Magisk) up
+# > Do not touch!
+set_busybox() {
+  if [ -x "$1" ]; then
+    for i in $(${1} --list); do
+      if [ "$i" != 'echo' ]; then
+        alias "$i"="${1} $i" 2>>$LOG >>$LOG
+      fi
+    done
+    _busybox=true
+    _bb=$1
+  fi
+}
+if [ ! -x $SYSTEM/xbin/busybox ]; then
+  _busybox=false
+  set_busybox /data/magisk/busybox
+  set_busybox /data/adb/magisk/busybox
+  if [ -d /sbin/.core/busybox ]; then
+    PATH=$PATH:/sbin/.core/busybox
+    _busybox=true
+  else
+    alias busybox=""
+  fi
+fi
+if [ -x $SYSTEM/xbin/busybox ]; then
+  true
+  _bb=$SYSTEM/xbin/busybox
+elif [ -x $SYSTEM/bin/busybox ]; then
+  true
+  _bb=$SYSTEM/bin/busybox
+elif [ -x /data/data/com.topjohnwu.magisk/busybox/busybox ]; then
+  export PATH=$PATH:/data/data/com.topjohnwu.magisk/busybox
+elif [ $_busybox ]; then
+  true
+else
+  echo "! Busybox not detected.."
+  echo "Please install one (@osm0sis' busybox recommended)"
+  false
+fi
+[ $? -ne 0 ] && exit $?
+_bbname=$(busybox | head -n1)
+_bbname=${_bbname%'('*}
+if [ "$_bbname" == "" ]; then
+  _bbname="BusyBox not found!"
+fi
+
+#=========================== Default Functions
+
+# set_file_prop <property> <value> <prop.file>
+set_file_prop() {
+  sed -i "s/${1}=.*/${1}=${2}/g" $3
+}
+
+# https://github.com/fearside/ProgressBar
+ProgressBar() {
+# Process data
+	_progress=$(((${1}*100/${2}*100)/100))
+	_done=$(((${_progress}*4)/10))
+	_left=$((40-$_done))
+# Build progressbar string lengths
+	_done=$(printf "%${_done}s")
+	_left=$(printf "%${_left}s")
+
+# 1.2 Build progressbar strings and print the ProgressBar line
+# 1.2.1 Output example:
+# 1.2.1.1 Progress : [########################################] 100%
+printf "\rProgress : [${_done// /=}${_left// / }] ${_progress}%%"
+
+}
+
+#=========================== Default Variables
+# > Stuff here is used for some other stuff
+# > Edit only if necessary!
+
+# Magisk Mod Directory
+MOUNTPATH=/magisk
+if [ ! -d $MOUNTPATH ]; then
+  if [ -d /sbin/.core/img ]; then
+    MOUNTPATH=/sbin/.core/img
+  fi
+fi
+MODDIR="$MOUNTPATH/$ID"
+if [ ! -d $MODDIR ]; then
+  if [ -d /sbin/.core/img/$ID ]; then
+    MODDIR=/sbin/.core/img/$ID
+  else
+    echo "Module not detected!"
+    exit 1
+  fi
+fi
+
+# Import util_functions.sh
+[ -f /data/adb/magisk/util_functions.sh ] && . /data/adb/magisk/util_functions.sh || exit 1
+
+# Version Number
+VER=$(grep_prop version $MODDIR/module.prop)
+# Version Code
+REL=$(grep_prop versionCode $MODDIR/module.prop)
+# Author
+AUTHOR=$(grep_prop author $MODDIR/module.prop)
+# Mod Name/Title
+MODTITLE=$(grep_prop name $MODDIR/module.prop)
+
+# Colors
+G='\e[01;32m'    # GREEN
+R='\e[01;31m'    # RED
+Y='\e[01;33m'    # YELLOW
+B='\e[01;34m'    # BLUE
+V='\e[01;35m'    # VIOLET
+Bl='\e[01;30m'   # BLACK
+C='\e[01;36m'    # CYAN
+W='\e[01;37m'    # WHITE
+N='\e[00;37;40m' # How to use (example): echo "${G}example${N}"
+
+# Remove colors if -nc
+[ "$1" == "-nc" ] && {
+  G=''
+  R=''
+  Y=''
+  B=''
+  V=''
+  Bl=''
+  C=''
+  W=''
+  N=''
+}
+
+# Divider (based on $MODTITLE, $VER, and $REL characters)
+div="${Bl}$(printf '%*s' "$(($(echo $MODTITLE | wc -c)+$(echo $VER | wc -c)+$(echo $REL | wc -c)))" '' | tr " " '=')${N}"
+
+#=========================== Main
+# > You can start your MOD here.
+# > You can add functions, variables & etc.
+# > Rather than editing the default vars above.
+
+
+# Terminal App Systemizer
+# by veez21
+clear
+echo "$div"
+echo "${W}$MODTITLE $VER${N}${Bl}($REL)${N}"
+echo "by ${W}$AUTHOR${N}"
+echo "$div"
+echo "${W}$_bbname${N}"
+echo "${Bl}$_bb${N}"
+echo "$div"
+
+use_aapt=0
+sysapp=0
+privapp=0
+perm_xml1=$SYSTEM/etc/permissions/privapp-permissions-platform.xml
+perm_xml=$MODDIR$SYSTEM2/etc/permissions/privapp-permissions-platform.xml
+if [ -f $perm_xml1 ]; then patch_xml=true; else patch_xml=false; fi
+mkdir -p $MODDIR$SYSTEM2/etc/permissions 2>/dev/null
+API=$(grep_prop ro.build.version.sdk $SYSTEM/build.prop)
+
+# Use aapt if present
+if [ -x $SYSTEM/bin/aapt ] || [ -x $SYSTEM/xbin/aapt ] || [ -x /sbin/aapt ] || [ -x $MODDIR/aapt ]; then
+  export PATH=$PATH:$MODDIR
+  use_aapt=1
+fi
+
+# Detect if /system/app is available
+if [ -d $SYSTEM/app ]; then
+  sysapp=1
+fi
+
+# Detect if /system/priv-app is available
+if [ -d $SYSTEM/priv-app ]; then
+  privapp=1
+fi
+
+# /magisk free space
+free_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $4}')"
+total_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $2}')"
+
+is_mounted() {
+  if [ ! -z "$2" ]; then
+    cat /proc/mounts | grep $1 | grep $2, >/dev/null
+  else
+    cat /proc/mounts | grep $1 >/dev/null
+  fi
+  return $?
+}
+
+# cmd
+cmd_or_pm() {
+}
+
+# List installed apps
+list_installed_apps() {
+  c=1
+  [ "$API" -gt "23" ] && {
+    list_a=($(cmd package list packages -3))
+    xzy=$(cmd package list packages -3 | wc | awk '{print $1}')
+  } || {
+    lias_a=($(pm list packages -3))
+    xzy=$(pm list packages -3 | wc | awk '{print $1}')
+  }
+  for i in ${list_a[@]}; do
+    ProgressBar $c $xzy
+    app[$c]=${i#*:}
+    package=${app[$c]}
+	package[$c]=$package
+    dir_app[$c]=/data/app/${app[$c]}-*/base.apk
+    [ $use_aapt == 1 ] && { app=$(aapt dump badging ${dir_app[$c]} | grep 'application-label:'); app[$c]=${app#*:}; }
+    app[$c]=$(echo ${app[$c]} | tr ' ' '_' | tr -d "'")
+    c=$((c+1))
+    #fi
+  done
+}
+
+# Systemize function
+# Usage: systemize <install directory> <apk directory>
+systemize() {
+  if [ "$2" ]; then
+    apkdir="$2"
+    apk=${apkdir##*/}
+    name=${apkdir%/*}; name=${name##*/}
+    name=$(echo $name | tr -d ' ' | tr -d "'" | tr -d '*' | tr -d '-')
+  fi
+  echo "Transfering ${apk}($name) to '$1'..."
+  sleep 0.3
+  if [ -d $SYSTEM/app/${name} ] || [ -d $SYSTEM/priv-app/${name} ] || [ -d $MODDIR$SYSTEM2/app/${name} ] || [ -d $MODDIR$SYSTEM2/priv-app/${name} ]; then
+    echo "App exists!"
+    exit 5
+  fi
+  mkdir -p ${MODDIR}${1}/${name}
+  cp -f $apkdir ${MODDIR}${1}/${name}
+  chmod -R 755 ${MODDIR}${1}/${name}
+  chmod 644 ${MODDIR}${1}/${name}/${apk}
+  chown 0.0 ${MODDIR}${1}/${name}/${apk}
+  sleep 0.3
+
+  $patch_xml && {
+    echo "Granting Permissions"
+    pp=0
+    for i in $(aapt d permissions $apkdir | awk '{print $2}'); do
+      pp=$((pp+1))
+      if [ $pp -ne 1 ]; then
+        app_perm=${i#*=}
+        app_perm[$pp]=$(echo $app_perm | tr -d "'")
+      fi
+    done
+    echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+<permissions>
+  <privapp-permissions package=\"${name}\">" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
+    for i in ${app_perm[@]}; do
+      echo "        <permission name=\"$i\"/>" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
+    done
+    echo "  </privapp-permissions>
+</permissions>" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
+    chmod 644 $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
+
+  }
+
+  sleep 0.3
+  echo "Reboot to apply changes"
+  exit
+}
+
+enter_apk_dir() {
+  echo -n "Enter APK Path:"
+  read apkdir
+  echo "Checking if file exists..."
+  sleep 0.3
+  if [ -f "$apkdir" ]; then
+    echo " - OK"
+    sleep 0.3
+    apk=${apkdir##*/}
+    echo "Checking if file is an APK..."
+    sleep 0.3
+    tmpapk=${apk##*.}
+    if [ "$tmpapk" == "apk" ]; then
+      echo " - OK"
+      sleep 0.3
+      echo "Checking package name..."
+      sleep 0.3
+      name=${apk%'.apk'*}
+      if [ $use_aapt == 1 ]; then
+        name=$(aapt dump badging $apkdir | head -n1 | awk '{print $2}')
+        name=${name#*=}
+      fi
+      name=$(echo $name | tr -d ' ' | tr -d "'")
+      echo " - $name"
+      sleep 0.3
+      echo "Checking APK size..."
+      sleep 0.3
+      if [ $(du -m $apkdir | awk '{print $1}') -gt $free_space ]; then
+        echo " - Insufficient $MOUNTPATH space! APK size: $(du -m $apkdir | awk '{print $1}')M | $MOUNTPATH Free: ${free_space}M"
+        echo " - Using magisk_merge.img to merge images..."
+        merge_img $apkdir 2>>$LOG
+      else
+        echo " - $(du -m $apkdir | awk '{print $1}')M"
+      fi
+      sleep 0.3
+      if [ $privapp == 1 ] && [ $sysapp == 1 ]; then 
+        echo "Where to install?"
+        echo -n "< 1 - $SYSTEM/app | 2 - $SYSTEM/priv-app > : "
+        read loc
+        if [ "$loc" == 1 ]; then
+          systemize /system/app
+        elif [ "$loc" == 2 ]; then
+          systemize /system/priv-app
+        else
+          echo "Invalid!"
+          exit 3
+        fi
+      elif [ $sysapp == 1 ] && [ $privapp == 0 ]; then
+        systemize /system/app
+      elif [ $privapp == 1 ] && [ $sysapp == 0 ]; then
+        systemize /system/priv-app
+      else
+        echo "No installation directory!"
+        exit 4
+      fi
+    else
+      echo "$apk is not an APK!"
+      exit 2
+    fi
+  else
+    echo "$apkdir doesn't exist!"
+    exit 1
+  fi
+}
+
+enter_apk_name() {
+  echo "Enter the App Label of the installed app"
+  echo -n " > "
+  read apklabel
+  if [ ! "$apklabel" ]; then
+    echo "error"
+    exit 1
+  fi
+  echo "Checking if $apklabel is installed"
+  list_installed_apps 2>$LOG
+  c=1
+  for i in ${package[@]}; do
+    [ "$apklabel" == "$i" ] && {
+	  c=$((c+1))	
+	  break
+	} || {
+	  c=$((c+1))	
+	  false
+	}
+  done
+  if [ $? -eq 0 ]; then
+    echo " - OK"
+    echo "Checking APK size..."
+    sleep 0.3
+	dir_app=$(echo /data/app/${apklabel}-*/base.apk)
+    if [ $(du -m $dir_app | awk '{print $1}') -gt $free_space ]; then
+      echo " - Insufficient $MOUNTPATH space!"
+	     echo " - APK size: $(du -m $dir_app | awk '{print $1}')M | $MOUNTPATH Free: ${free_space}M"
+      echo " - Using magisk_merge.img to merge images..."
+      merge_img ${dir_app} 2>>$LOG
+    else
+      echo " - $(du -m $dir_app | awk '{print $1}')M"
+    fi
+    if [ -d $SYSTEM/priv-app ]; then
+      installdir="priv-app"
+    else
+      installdir="app"
+    fi
+	systemize $MODDIR$SYSTEM2/$installdir $dir_app
+	[ $? -ne 0 ] && echo "Failed!" && exit 1
+  else
+    echo "Failed!"
+    exit 1
+  fi
+}
+
+revert_apps() {
+  echo "$div"
+  echo "Revert"
+  echo "$div"
+  echo ""
+  echo "Loading..."
+  cc=1
+  for i in $(find $MODDIR -name "*.apk"); do
+    rev_dir[$cc]=${i%/*}
+    rev_label=${i%/*}
+    rev_label[$cc]=${rev_label##*/}
+    echo " $cc - ${rev_label[$cc]}"
+    cc=$((cc+1))
+  done
+  echo ""
+  echo " 0 -  Exit"
+  echo -n "[CHOICE]: "
+  read revert
+  if [ "$revert" -gt ${#rev_label[@]} ] || [ "$revert" -lt 0 ] || [ "$revert" == "" ] || [ -n "$(echo $revert | tr -d '0-9')" ] ; then
+    echo "Invalid!"
+    exit 1
+  elif [ "$revert" == 0 ]; then
+    exit
+  else
+    echo "Reverting ${rev_label[$revert]}..."
+    rm -rf ${rev_dir[$revert]}
+    echo "Done! Reboot to apply changes"
+    exit
+  fi
+}
+
+# Merge
+merge_img() {
+  apk_size=$(($(du -m $1 | awk '{print $1}')+2))
+  if [ "$(grep_prop minMagisk $MODDIR/module.prop)" -ge "1500" ]; then
+    IMG=/data/adb/magisk_merge.img
+  else
+    IMG=/data/magisk_merge.img
+  fi
+  install_dir=/dev/tmp/${ID}
+  path=/dev/magisk_merge
+  tmpmodpath=$path/${ID}
+  mkdir -p $install_dir
+  reqSizeM=$apk_size
+  MOUNTPATH=$path
+  mount_magisk_img  
+  cp -af $MODDIR/. $tmpmodpath
+  MODDIR=$tmpmodpath
+}
+
+mount -o remount,rw $MOUNTPATH 2>/dev/null
+mount -o rw,remount $MOUNTPATH 2>/dev/null
+busybox mount -o remount,rw $MOUNTPATH 2>/dev/null
+busybox mount -o rw,remount $MOUNTPATH 2>/dev/null
+
+echo ""
+echo " 1 - Systemize Installed Apps (Listed)"
+echo " 2 - Systemize Installed Apps (Enter label) "
+echo " 3 - Systemize given APK"
+if [[ $(find $MODDIR -name "*.apk" 2>/dev/null) ]]; then
+  echo " 4 - Revert Systemized Apps"
+fi
+echo " d - ${C}Donate${N}"
+echo " 0 - Exit"
+echo ""
+echo -n "[CHOICE]: "
+ read choice
+if [ "$choice" == 1 ]; then
+  clear
+  list_installed_apps 2>/dev/null
+  clear
+  echo "$div"
+  echo "Installed Apps"
+  echo "$div"
+  echo ""
+  for i in $(seq 1 $((${#app[@]}-1))); do
+    echo " ${Bl}$i${N} - ${W}${app[$i]}${N}" | tr '_' ' '
+  done
+  echo ""
+  echo " 0 -  Exit"
+  echo -n "[CHOICE]: "
+  read installed
+  if [ "$installed" -gt ${#app[@]} ] || [ "$installed" -lt 0 ] || [ "$installed" == "" ] || [ -n "$(echo $installed | tr -d '0-9')" ] ; then
+    echo "Invalid!"
+    exit 1
+  elif [ "$installed" == 0 ]; then
+    exit
+  else
+    echo "Checking APK directory..."
+    sleep 0.3
+    if [ -f ${dir_app[$installed]} ]; then
+      echo " - OK"
+      sleep 0.3
+      apkdir=${dir_app[$installed]}
+      apk=${apkdir##*/}
+      name=${apkdir%/*}; name=${name##*/}
+      name=$(echo $name | tr -d ' ' | tr -d "'" | tr -d '*' | tr -d '-')
+      echo "Checking package name..."
+      sleep 0.3
+      echo " - $name"
+      sleep 0.3
+      echo "Checking APK size..."
+      sleep 0.3
+      if [ $(du -m $apkdir | awk '{print $1}') -gt $free_space ]; then
+        echo " - Insufficient $MOUNTPATH space!"
+		 echo " - APK size: $(du -m $apkdir | awk '{print $1}')M | $MOUNTPATH Free: ${free_space}M"
+        echo " - Using magisk_merge.img to merge images..."
+        merge_img $apkdir 2>>$LOG
+      else
+        echo " - $(du -m $apkdir | awk '{print $1}')M"
+      fi
+      sleep 0.3
+      if [ $privapp == 1 ] && [ $sysapp == 1 ]; then 
+        echo "Where to install?"
+        echo -n "< 1 - $SYSTEM/app | 2 - $SYSTEM/priv-app > : "
+        read loc
+        if [ "$loc" == 1 ]; then
+          systemize /system/app
+        elif [ "$loc" == 2 ]; then
+          systemize /system/priv-app
+        else
+          echo "Invalid!"
+          exit 3
+        fi
+      elif [ $sysapp == 1 ] && [ $privapp == 0 ]; then
+        systemize /system/app
+      elif [ $privapp == 1 ] && [ $sysapp == 0 ]; then
+        systemize /system/priv-app
+      else
+        echo "No installation directory!"
+        exit 4
+      fi  
+    else
+      echo "APK doesn't exist!"
+      exit 6
+    fi
+  fi
+elif [ "$choice" == 2 ]; then
+  clear
+  enter_apk_name
+  exit $? 
+elif [ "$choice" == 3 ]; then
+  clear
+  enter_apk_dir
+  exit $?
+elif [ "$choice" == 4 ]; then
+  clear
+  revert_apps
+  exit $?
+
+elif [ "$choice" == "d" ] || [ "$choice" == "D" ]; then
+  am start https://paypal.me/veez21 >/dev/null
+elif [ "$choice" == 0 ]; then
+  exit
+else  echo "Invalid!"
+  exit 1
+fi
+  

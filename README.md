@@ -14,18 +14,7 @@
 
 ## Changelog
 
-### v9.3
-* Update tenplate
-* Properly support oreo
-* Fix app detection
-### v10
-* Code cleanup
-* Changed some hardcoded variables
-* Display Busybox info
-* Rename *_*
-### v10.1
-* Fixed APK label option
-* Fix magisk_merge.img issues on A/B devices
-* Use util_functions.sh
-### v10.2
-* Fix errors
+### v10.4
+* Add -nc option to disable colors
+* Faster app detection
+* Progress Bar added

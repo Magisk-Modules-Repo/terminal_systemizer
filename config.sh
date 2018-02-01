@@ -41,7 +41,8 @@ LATESTARTSERVICE=false
 
 print_modname() {
   ui_print "*******************************"
-  ui_print "     Magisk Module Template    "
+  ui_print "      Terminal Debloater       "
+  ui_print "  by veez21 @ xda-developers   "
   ui_print "*******************************"
 }
 
@@ -86,7 +87,7 @@ set_permissions() {
   # The following is default permissions, DO NOT remove
   set_perm_recursive  $MODPATH  0  0  0755  0644
   cp -af $INSTALLER/common/aapt $MODPATH/aapt
-  set_perm $MODPATH/system/bin/systemize 0 0 0777
+  set_perm $MODPATH/system/xbin/systemize 0 0 0777
   set_perm $MODPATH/aapt 0 0 0777
 }
 
