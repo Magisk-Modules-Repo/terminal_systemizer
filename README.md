@@ -18,3 +18,7 @@
 * Add -nc option to disable colors
 * Faster app detection
 * Progress Bar added
+### v10.5
+* Fixed App listing function
+* Updated Revert Apps option
+* Install in bin or in xbin if present

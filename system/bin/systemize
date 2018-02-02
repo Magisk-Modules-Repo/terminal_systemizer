@@ -88,6 +88,23 @@ set_file_prop() {
   sed -i "s/${1}=.*/${1}=${2}/g" $3
 }
 
+# https://github.com/fearside/ProgressBar
+ProgressBar() {
+# Process data
+	_progress=$(((${1}*100/${2}*100)/100))
+	_done=$(((${_progress}*4)/10))
+	_left=$((40-$_done))
+# Build progressbar string lengths
+	_done=$(printf "%${_done}s")
+	_left=$(printf "%${_left}s")
+
+# 1.2 Build progressbar strings and print the ProgressBar line
+# 1.2.1 Output example:
+# 1.2.1.1 Progress : [########################################] 100%
+printf "\rProgress : [${_done// /=}${_left// / }] ${_progress}%%"
+
+}
+
 #=========================== Default Variables
 # > Stuff here is used for some other stuff
 # > Edit only if necessary!
@@ -132,6 +149,11 @@ C='\e[01;36m'    # CYAN
 W='\e[01;37m'    # WHITE
 N='\e[00;37;40m' # How to use (example): echo "${G}example${N}"
 
+# Remove colors if -nc
+[ "$1" == "-nc" ] && {
+  G=''; R=''; Y=''; B=''; V=''; Bl=''; C=''; W=''; N=''
+}
+
 # Divider (based on $MODTITLE, $VER, and $REL characters)
 div="${Bl}$(printf '%*s' "$(($(echo $MODTITLE | wc -c)+$(echo $VER | wc -c)+$(echo $REL | wc -c)))" '' | tr " " '=')${N}"
 
@@ -152,18 +174,19 @@ echo "${W}$_bbname${N}"
 echo "${Bl}$_bb${N}"
 echo "$div"
 
-use_aapt=0
+use_aapt=false
 sysapp=0
 privapp=0
 perm_xml1=$SYSTEM/etc/permissions/privapp-permissions-platform.xml
 perm_xml=$MODDIR$SYSTEM2/etc/permissions/privapp-permissions-platform.xml
-if [ -f $perm_xml1 ]; then patch_xml=true; else patch_xml=false; fi
+[ -f $perm_xml1 ] && patch_xml=true || patch_xml=false
 mkdir -p $MODDIR$SYSTEM2/etc/permissions 2>/dev/null
+API=$(grep_prop ro.build.version.sdk $SYSTEM/build.prop)
 
 # Use aapt if present
 if [ -x $SYSTEM/bin/aapt ] || [ -x $SYSTEM/xbin/aapt ] || [ -x /sbin/aapt ] || [ -x $MODDIR/aapt ]; then
   export PATH=$PATH:$MODDIR
-  use_aapt=1
+  use_aapt=true
 fi
 
 # Detect if /system/app is available
@@ -180,31 +203,37 @@ fi
 free_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $4}')"
 total_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $2}')"
 
-is_mounted() {
-  if [ ! -z "$2" ]; then
-    cat /proc/mounts | grep $1 | grep $2, >/dev/null
-  else
-    cat /proc/mounts | grep $1 >/dev/null
-  fi
-  return $?
-}
-
 # List installed apps
 list_installed_apps() {
   c=1
-  for i in $(ls /data/data); do
-    if [[ ! "$(dumpsys package $i | grep 'codePath=/system')" ]] && [[ ! "$(dumpsys package $i | grep "targetSdk=0")" ]]; then
-      app[$c]=${i##*/}
-      package=${app[$c]}
-	  package[$c]=$package
-      dir_app[$c]=/data/app/${app[$c]}-*/base.apk
-      if [ $use_aapt == 1 ]; then
-        app=$(aapt dump badging ${dir_app[$c]} | grep 'application-label:')
-        app[$c]=${app#*:}
-      fi
-      app[$c]=$(echo ${app[$c]} | tr ' ' '_' | tr -d "'")
-      c=$((c+1))
-    fi
+  [ "$API" -gt "23" ] && {
+    list_a=($(cmd package list packages -3))
+  } || {
+    list_a=($(pm list packages -3))
+  }
+  for i in ${list_a[@]}; do
+    ProgressBar $c ${#list_a[@]}
+    app=${i#*:}
+    package=$app
+	package[$c]=$package
+    dir_app[$c]=/data/app/$app-*/base.apk
+    $use_aapt && { app=$(aapt dump badging ${dir_app[$c]} | grep 'application-label:'); app=${app#*:}; }
+    app[$c]=$(echo $app | tr ' ' '_' | tr -d "'")
+    c=$((c+1))
+  done
+}
+
+list_systemized_apps() {
+  systemized_apps=($(find $MODDIR -name "*.apk"))
+  cc=1
+  for i in ${systemized_apps[@]}; do
+    ProgressBar $cc ${#systemized_apps[@]}
+    rev_dir[$cc]=${i%/*}
+    rev_label[$cc]=${i%/*}
+    rev_label[$cc]=${rev_label[$cc]##*/}
+	rev_app[$cc]=${rev_label[$cc]}
+	$use_aapt && { rev_app=$(aapt dump badging $i | grep 'application-label:'); rev_app=${rev_app#*:}; rev_app[$cc]=$(echo $rev_app | tr ' ' '_' | tr -d "'"); }
+    cc=$((cc+1))
   done
 }
 
@@ -275,7 +304,7 @@ enter_apk_dir() {
       echo "Checking package name..."
       sleep 0.3
       name=${apk%'.apk'*}
-      if [ $use_aapt == 1 ]; then
+      if [ $use_aapt ]; then
         name=$(aapt dump badging $apkdir | head -n1 | awk '{print $2}')
         name=${name#*=}
       fi
@@ -369,31 +398,28 @@ enter_apk_name() {
 }
 
 revert_apps() {
+  list_systemized_apps
+  clear
   echo "$div"
   echo "Revert"
   echo "$div"
   echo ""
-  echo "Loading..."
-  cc=1
-  for i in $(find $MODDIR -name "*.apk"); do
-    rev_dir[$cc]=${i%/*}
-    rev_label=${i%/*}
-    rev_label[$cc]=${rev_label##*/}
-    echo " $cc - ${rev_label[$cc]}"
-    cc=$((cc+1))
+  for i in $(seq 1 $((${#rev_app[@]}-1))); do
+    echo " ${Bl}$i${N} - ${W}${rev_app[$i]}${N}" | tr '_' ' '
   done
   echo ""
   echo " 0 -  Exit"
   echo -n "[CHOICE]: "
   read revert
-  if [ "$revert" -gt ${#rev_label[@]} ] || [ "$revert" -lt 0 ] || [ "$revert" == "" ] || [ -n "$(echo $revert | tr -d '0-9')" ] ; then
+  if [ "$revert" -gt ${#rev_app[@]} ] || [ "$revert" -lt 0 ] || [ "$revert" == "" ] || [ -n "$(echo $revert | tr -d '0-9')" ] ; then
     echo "Invalid!"
     exit 1
   elif [ "$revert" == 0 ]; then
     exit
   else
-    echo "Reverting ${rev_label[$revert]}..."
+    echo "Reverting ${rev_app[$revert]}..." | tr '_' ' '
     rm -rf ${rev_dir[$revert]}
+	rm -rf $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${rev_label[$revert]}.xml 2>$LOG >$LOG
     echo "Done! Reboot to apply changes"
     exit
   fi
@@ -437,12 +463,12 @@ echo -n "[CHOICE]: "
  read choice
 if [ "$choice" == 1 ]; then
   clear
+  list_installed_apps 2>/dev/null
+  clear
   echo "$div"
   echo "Installed Apps"
   echo "$div"
   echo ""
-  echo "Loading Apps..."
-  list_installed_apps 2>/dev/null
   for i in $(seq 1 $((${#app[@]}-1))); do
     echo " ${Bl}$i${N} - ${W}${app[$i]}${N}" | tr '_' ' '
   done
