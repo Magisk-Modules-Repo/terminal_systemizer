@@ -22,3 +22,6 @@
 * Fixed App listing function
 * Updated Revert Apps option
 * Install in bin or in xbin if present
+### v10.6
+* Fixed App listing function again
+* Faster app detection

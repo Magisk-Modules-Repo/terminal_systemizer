@@ -182,6 +182,8 @@ perm_xml=$MODDIR$SYSTEM2/etc/permissions/privapp-permissions-platform.xml
 [ -f $perm_xml1 ] && patch_xml=true || patch_xml=false
 mkdir -p $MODDIR$SYSTEM2/etc/permissions 2>/dev/null
 API=$(grep_prop ro.build.version.sdk $SYSTEM/build.prop)
+CMD_DETECT=false
+[ -f /cache/cmd_systemize ] && CMD_DETECT=true
 
 # Use aapt if present
 if [ -x $SYSTEM/bin/aapt ] || [ -x $SYSTEM/xbin/aapt ] || [ -x /sbin/aapt ] || [ -x $MODDIR/aapt ]; then
@@ -206,21 +208,38 @@ total_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $2}')"
 # List installed apps
 list_installed_apps() {
   c=1
-  [ "$API" -gt "23" ] && {
-    list_a=($(cmd package list packages -3))
+  $CMD_DETECT && {
+    [ "$API" -gt "23" ] && {
+      list_a=($(cmd package list packages -3))
+    } || {
+      list_a=($(pm list packages -3))
+    }
+	for i in ${list_a[@]}; do
+      if [[ ! "$(dumpsys package $i | grep -e 'codePath=/system' -e 'targetSdk=0' -e 'codePath=/vendor/overlay')" ]]; then
+        ProgressBar $c ${#list_a[@]}
+        app=${i#*:}
+        package=$app
+	    package[$c]=$package
+        dir_app[$c]=/data/app/$app-*/base.apk
+        $use_aapt && { app=$(aapt dump badging ${dir_app[$c]} | grep 'application-label:'); app=${app#*:}; }
+        app[$c]=$(echo $app | tr ' ' '_' | tr -d "'")
+        c=$((c+1))
+	  fi
+    done
   } || {
-    list_a=($(pm list packages -3))
+    c=1
+    for i in $(ls /data/data); do
+      if [[ ! "$(dumpsys package $i | grep -e 'codePath=/system' -e 'targetSdk=0' -e 'codePath=/vendor/overlay')" ]]; then
+		app=${i##*/}
+        package=$app
+	    package[$c]=$package
+        dir_app[$c]=/data/app/$app-*/base.apk
+        $use_aapt && { app=$(aapt dump badging ${dir_app[$c]} | grep 'application-label:'); app=${app#*:}; }
+        app[$c]=$(echo $app | tr ' ' '_' | tr -d "'")
+        c=$((c+1))
+      fi
+    done
   }
-  for i in ${list_a[@]}; do
-    ProgressBar $c ${#list_a[@]}
-    app=${i#*:}
-    package=$app
-	package[$c]=$package
-    dir_app[$c]=/data/app/$app-*/base.apk
-    $use_aapt && { app=$(aapt dump badging ${dir_app[$c]} | grep 'application-label:'); app=${app#*:}; }
-    app[$c]=$(echo $app | tr ' ' '_' | tr -d "'")
-    c=$((c+1))
-  done
 }
 
 list_systemized_apps() {
@@ -499,7 +518,7 @@ if [ "$choice" == 1 ]; then
       sleep 0.3
       if [ $(du -m $apkdir | awk '{print $1}') -gt $free_space ]; then
         echo " - Insufficient $MOUNTPATH space!"
-		 echo " - APK size: $(du -m $apkdir | awk '{print $1}')M | $MOUNTPATH Free: ${free_space}M"
+		echo " - APK size: $(du -m $apkdir | awk '{print $1}')M | $MOUNTPATH Free: ${free_space}M"
         echo " - Using magisk_merge.img to merge images..."
         merge_img $apkdir 2>>$LOG
       else
