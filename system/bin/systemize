@@ -183,7 +183,9 @@ perm_xml=$MODDIR$SYSTEM2/etc/permissions/privapp-permissions-platform.xml
 mkdir -p $MODDIR$SYSTEM2/etc/permissions 2>/dev/null
 API=$(grep_prop ro.build.version.sdk $SYSTEM/build.prop)
 CMD_DETECT=false
+fast_detect=false
 [ -f /cache/cmd_systemize ] && CMD_DETECT=true
+[ -f /cache/fast_systemize ] && fast_detect=true
 
 # Use aapt if present
 if [ -x $SYSTEM/bin/aapt ] || [ -x $SYSTEM/xbin/aapt ] || [ -x /sbin/aapt ] || [ -x $MODDIR/aapt ]; then
@@ -228,6 +230,7 @@ list_installed_apps() {
     done
   } || {
     c=1
+	if $fast_detect; then
     for i in $(ls /data/data); do
       if [[ ! "$(dumpsys package $i | grep -e 'codePath=/system' -e 'targetSdk=0' -e 'codePath=/vendor/overlay')" ]]; then
 		app=${i##*/}
@@ -239,6 +242,19 @@ list_installed_apps() {
         c=$((c+1))
       fi
     done
+	else
+    for i in $(ls /data/data); do
+      if [[ ! "$(dumpsys package $i | grep 'codePath=/system')" ]] && [[ ! "$(dumpsys package $i | grep "targetSdk=0")" ]] && [[ ! "$(dumpsys package $i | grep "codePath=/vendor/overlay")" ]]; then
+		app=${i##*/}
+        package=$app
+	    package[$c]=$package
+        dir_app[$c]=/data/app/$app-*/base.apk
+        $use_aapt && { app=$(aapt dump badging ${dir_app[$c]} | grep 'application-label:'); app=${app#*:}; }
+        app[$c]=$(echo $app | tr ' ' '_' | tr -d "'")
+        c=$((c+1))
+      fi
+    done
+	fi
   }
 }
 
