@@ -14,14 +14,8 @@
 
 ## Changelog
 
-### v10.4
-* Add -nc option to disable colors
-* Faster app detection
-* Progress Bar added
-### v10.5
-* Fixed App listing function
-* Updated Revert Apps option
-* Install in bin or in xbin if present
+### v10.6.1
+* Samsung detection (bin/xbin)
 ### v10.6
 * Fixed App listing function again
 * Faster app detection
