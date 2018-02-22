@@ -10,7 +10,7 @@
  And Reboot to apply changes.
 
 ## Error?
- Send `/cache/terminal_systemizer-vebose.log` in the XDA thread. I'll examine it for problems and will try to fix it.
+ Send `/cache/terminal_systemizer-verbose.log` in the XDA thread. I'll examine it for problems and will try to fix it.
 
 ## Changelog
 
