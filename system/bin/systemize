@@ -232,7 +232,7 @@ list_installed_apps() {
     c=1
 	if $fast_detect; then
     for i in $(ls /data/data); do
-      if [[ ! "$(dumpsys package $i | grep -e 'codePath=/system' -e 'targetSdk=0' -e 'codePath=/vendor/overlay')" ]]; then
+	if ! dumpsys package $i | grep -qEm1 -e '(codePath=/system|targetSdk=0|codePath=/vendor/overlay)' - ; then
 		app=${i##*/}
         package=$app
 	    package[$c]=$package

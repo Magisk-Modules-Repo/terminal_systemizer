@@ -14,6 +14,8 @@
 
 ## Changelog
 
+### v10.7
+* Faster App detection (create `/cache/fast_systemize` to use this)
 ### v10.6.1
 * Samsung detection (bin/xbin)
 ### v10.6
