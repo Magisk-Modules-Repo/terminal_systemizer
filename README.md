@@ -14,6 +14,11 @@
 
 ## Changelog
 
+### v11
+* Sorted alphabetically (finally)
+* More efficient app detection (by default)
+* Fixed package name option
+* Cleaned some stuff
 ### v10.7
 * Faster App detection (create `/cache/fast_systemize` to use this)
 ### v10.6.1

@@ -41,7 +41,7 @@ LATESTARTSERVICE=false
 
 print_modname() {
   ui_print "*******************************"
-  ui_print "      Terminal Debloater       "
+  ui_print "   Terminal App Systemizer     "
   ui_print "  by veez21 @ xda-developers   "
   ui_print "*******************************"
 }
