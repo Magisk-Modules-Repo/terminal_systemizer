@@ -112,60 +112,46 @@ detect_installed() {
   no_app=0
   no_privapp=0
   no_xml=0
-  all_apk_size=0
-  mkdir -p $TMPDIR/$MODID/system
-  mkdir -p $TMPDIR/$MODID/system/app
-  mkdir -p $TMPDIR/$MODID/system/priv-app
-  mkdir -p $TMPDIR/$MODID/system/etc/permissions
-  if [ -d $MODPATH/system/app ]; then
-    for i in $(find $MODPATH/system/app -name *.apk -type f); do
-	  if [ "$1" != "size" ]; then
-        cp -af ${i%/*} $TMPDIR/$MODID/system/app
-	  fi
-	  all_apk_size=$((all_apk_size+$(du $i | awk '{print $1}')))
-    done
+  additional_size=0
+
+  mkdir -p $TMPDIR/$MODID
+  COPYPATH=$MODPATH
+  $BOOTMODE && COPYPATH=/sbin/.core/img/$MODID
+
+  if [ -d $COPYPATH/system/app ]; then
+    cp -af $COPYPATH/system/app $TMPDIR/$MODID
+	  additional_size=$((additional_size+$(du -ks $COPYPATH/system/app | awk '{print $1}')))
   else
     no_app=1
   fi
-  if [ -d $MODPATH/system/priv-app ]; then
-    for i in $(find $MODPATH/system/priv-app -name *.apk -type f); do
-	  if [ "$1" != "size" ]; then
-        cp -af ${i%/*} $TMPDIR/$MODID/system/priv-app
-	  fi
-	  all_apk_size=$((all_apk_size+$(du $i | awk '{print $1}')))
-    done
+
+  if [ -d $COPYPATH/system/priv-app ]; then
+    cp -af $COPYPATH/system/priv-app $TMPDIR/$MODID
+	  additional_size=$((additional_size+$(du -ks $COPYPATH/system/priv-app | awk '{print $1}')))
   else
     no_privapp=1
   fi
-  if [ -d $MODPATH/system/etc/permissions ]; then
-    for i in $(find $MODPATH/system/etc/permissions -name *.xml -type f); do
-	  if [ "$1" != "size" ]; then
-	    cp -af ${i%/*} $TMPDIR/$MODID/system/etc/permissions
-      fi
-	done
+
+  if [ -d $COPYPATH/system/etc/permissions ]; then
+    cp -af $COPYPATH/system/etc/permissions $TMPDIR/$MODID
+	  additional_size=$((additional_size+$(du -ks $COPYPATH/system/etc/permissions | awk '{print $1}')))
   else
     no_xml=1
   fi
-  #reqSizeM=$((reqSizeM+all_apk_size))
+
+  additional_size=$((additional_size / 1024 + 1))
+  reqSizeM=$((reqSizeM+additional_size))
 }
 
 reinstall() {
   if [ $no_app == 0 ]; then
-    for i in $(find $TMPDIR/$MODID/system/app -name *.apk -type f); do
-	  app=${i%/*}
-      mkdir -p $MODPATH/system/app/${app##*/}
-      cp -af $app/. $MODPATH/system/app/${app##*/}
-    done
+    cp -af $TMPDIR/$MODID/app $MODPATH/system
   fi
   if [ $no_privapp == 0 ]; then
-    for i in $(find $TMPDIR/$MODID/system/priv-app -name *.apk -type f); do
-	  app=${i%/*}
-      mkdir -p $MODPATH/system/priv-app/${app##*/}
-      cp -af $app/. $MODPATH/system/priv-app/${app##*/}
-    done
+    cp -af $TMPDIR/$MODID/priv-app $MODPATH/system
   fi
   if [ $no_xml == 0 ]; then
-	mkdir -p $MODPATH/system/etc/permissions
-	cp -af $TMPDIR/$MODID/system/etc/permissions/* $MODPATH/system/etc/permissions
+	  mkdir -p $MODPATH/system/etc
+	  cp -af $TMPDIR/$MODID/permissions $MODPATH/system/etc
   fi
 }
