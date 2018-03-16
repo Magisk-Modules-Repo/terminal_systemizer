@@ -14,6 +14,9 @@
 
 ## Changelog
 
+### v11.1
+* Fix xbin not getting deleted
+* Add Spinner when loading apps
 ### v11
 * Sorted alphabetically (finally)
 * More efficient app detection (by default)

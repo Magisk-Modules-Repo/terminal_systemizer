@@ -207,8 +207,10 @@ total_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $2}')"
 # List installed apps
 list_installed_apps() {
     rm $LISTFILE 2>$LOG
-	c=1
+	c=1; h=0; anim='-\|/';
     for i in $(ls /data/data); do
+	h=$(((h+1)%4))
+	printf "\rLoading Apps [${anim:$h:1}]"
 	  if ! dumpsys package $i | grep -qEm1 -e '(codePath=/system|targetSdk=0|codePath=/vendor/overlay)' - ; then
 		app=${i##*/}
         package=$app

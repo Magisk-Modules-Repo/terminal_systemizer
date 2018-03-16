@@ -92,7 +92,8 @@ set_permissions() {
     bin=xbin
 	mkdir $MODPATH/system/$bin
 	mv $MODPATH/system/bin/systemize $MODPATH/system/$bin
-	rm -rf $MODPATH/system/bin
+	rm -rf $MODPATH/system/bin/*
+	rmdir $MODPATH/system/bin
   fi
   set_perm $MODPATH/system/$bin/systemize 0 0 0777
   set_perm $MODPATH/aapt 0 0 0777
