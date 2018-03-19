@@ -97,11 +97,11 @@ ui_print "******************************"
 # Get the variable reqSizeM. Use your own method to determine reqSizeM if needed
 request_zip_size_check "$ZIP"
 
-# This function will mount $IMG to $MOUNTPATH, and resize the image based on $reqSizeM
-mount_magisk_img
-
 # Detect Systemized Apps
 detect_installed
+
+# This function will mount $IMG to $MOUNTPATH, and resize the image based on $reqSizeM
+mount_magisk_img
 
 # Create mod paths
 rm -rf $MODPATH 2>/dev/null
