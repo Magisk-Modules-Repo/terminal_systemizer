@@ -14,6 +14,8 @@
 
 ## Changelog
 
+### v11.2
+* Systemized apps now persist when updating in Magisk Manager
 ### v11.1
 * Fix xbin not getting deleted
 * Add Spinner when loading apps
