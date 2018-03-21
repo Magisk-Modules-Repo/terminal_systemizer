@@ -14,6 +14,8 @@
 
 ## Changelog
 
+### v11.2.1
+* Fixed updating through TWRP
 ### v11.2
 * Systemized apps now persist when updating in Magisk Manager
 ### v11.1
