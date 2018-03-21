@@ -97,11 +97,17 @@ ui_print "******************************"
 # Get the variable reqSizeM. Use your own method to determine reqSizeM if needed
 request_zip_size_check "$ZIP"
 
+# we need the real magisk image mounted in recovery before trying to detect
+# already systemized apps, the size should already be correct as all apps are
+# already there
+$BOOTMODE || mount_magisk_img
+
 # Detect Systemized Apps
 detect_installed
 
-# This function will mount $IMG to $MOUNTPATH, and resize the image based on $reqSizeM
-mount_magisk_img
+# in bootmode we mount a temporary merge-image, that might need to be resized
+# to the new size detected in detect_installed on mount
+$BOOTMODE && mount_magisk_img
 
 # Create mod paths
 rm -rf $MODPATH 2>/dev/null
