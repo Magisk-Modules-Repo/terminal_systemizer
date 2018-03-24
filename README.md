@@ -14,6 +14,10 @@
 
 ## Changelog
 
+### v11.3
+* Batch systemizing
+* New way of systemizing
+* Misc
 ### v11.2.1
 * Fixed updating through TWRP
 ### v11.2
@@ -26,10 +30,3 @@
 * More efficient app detection (by default)
 * Fixed package name option
 * Cleaned some stuff
-### v10.7
-* Faster App detection (create `/cache/fast_systemize` to use this)
-### v10.6.1
-* Samsung detection (bin/xbin)
-### v10.6
-* Fixed App listing function again
-* Faster app detection

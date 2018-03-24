@@ -24,7 +24,6 @@ VERLOG=/cache/${ID}-verbose.log
 set -x 2>$VERLOG
 
 #=========================== Determine if A/B OTA device
-#ABDeviceCheck=$(cat /proc/cmdline | grep slot_suffix | wc -l)
 if [ -d /system_root ]; then
   isABDevice=true
   SYSTEM=/system_root/system
@@ -77,8 +76,10 @@ fi
 [ $? -ne 0 ] && exit $?
 _bbname=$(busybox | head -n1)
 _bbname=${_bbname%'('*}
+BBok=true
 if [ "$_bbname" == "" ]; then
   _bbname="BusyBox not found!"
+  BBok=false
 fi
 
 #=========================== Default Functions
@@ -103,6 +104,17 @@ ProgressBar() {
 # 1.2.1.1 Progress : [########################################] 100%
 printf "\rProgress : [${_done// /=}${_left// / }] ${_progress}%%"
 
+}
+
+# Log files will be uploaded to termbin.com
+upload_logs() {
+  $BBok && {
+    echo -n "Testing internet connection "
+    ping -q -c 1 -W 1 google.com >/dev/null 2>/dev/null && echo "- OK" || { echo "Error"; exit 1; }
+    [ -f $VERLOG ] && verUp=$(cat $VERLOG | nc termbin.com 9999) && echo "Verbose log URL: $verUp"
+    [ -f $LOG ] && logUp=$(cat $LOG | nc termbin.com 9999) && echo "Log URL: $logUp"
+  } || echo "Busybox not found!"
+  exit
 }
 
 #=========================== Default Variables
@@ -163,7 +175,7 @@ div="${Bl}$(printf '%*s' "$(($(echo $MODTITLE | wc -c)+$(echo $VER | wc -c)+$(ec
 # > Rather than editing the default vars above.
 
 
-# Terminal App Systemizer
+# Terminal Debloater
 # by veez21
 clear
 echo "$div"
@@ -260,62 +272,52 @@ systemize() {
       name=$(echo $name | tr -d ' ' | tr -d "'" | tr -d '*' | tr -d '-')
 	fi
   fi
-  echo "Transfering ${apk}($name) to '$1'..."
-  sleep 0.3
+  echo " Transfering ${apk}($name) to '$1'..."
   if [ -d $SYSTEM/app/${name} ] || [ -d $SYSTEM/priv-app/${name} ] || [ -d $MODDIR$SYSTEM2/app/${name} ] || [ -d $MODDIR$SYSTEM2/priv-app/${name} ]; then
-    echo "App exists!"
-    exit 5
-  fi
-  mkdir -p ${MODDIR}${1}/${name}
-  cp -f $apkdir ${MODDIR}${1}/${name}
-  chmod -R 755 ${MODDIR}${1}/${name}
-  chmod 644 ${MODDIR}${1}/${name}/${apk}
-  chown 0.0 ${MODDIR}${1}/${name}/${apk}
-  sleep 0.3
+    echo " App exists!"
+    #exit 5
+  else
+    mkdir -p ${MODDIR}${1}/${name}
+    cp -f $apkdir ${MODDIR}${1}/${name}
+    set_perm_recursive  ${MODDIR}${1}/${name} 0 0 0755 0755
 
-  $patch_xml && {
-    echo "Granting Permissions"
-    pp=0
-    for i in $(aapt d permissions $apkdir | awk '{print $2}'); do
-      pp=$((pp+1))
-      if [ $pp -ne 1 ]; then
-        app_perm=${i#*=}
-        app_perm[$pp]=$(echo $app_perm | tr -d "'")
-      fi
-    done
-    echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+    $patch_xml && [ ${1##*/} == "priv-app" ] && {
+      echo " Granting Permissions"
+      pp=0
+      for i in $(aapt d permissions $apkdir | awk '{print $2}'); do
+        pp=$((pp+1))
+        if [ $pp -ne 1 ]; then
+          app_perm=${i#*=}
+          app_perm[$pp]=$(echo $app_perm | tr -d "'")
+        fi
+      done
+      echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
 <permissions>
   <privapp-permissions package=\"${name}\">" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
-    for i in ${app_perm[@]}; do
-      echo "        <permission name=\"$i\"/>" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
-    done
-    echo "  </privapp-permissions>
+      for i in ${app_perm[@]}; do
+        echo "        <permission name=\"$i\"/>" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
+      done
+      echo "  </privapp-permissions>
 </permissions>" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
-    chmod 644 $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
-  }
+      chmod 644 $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
+    }
 
-  sleep 0.3
-  echo "Reboot to apply changes"
-  exit
+  echo " ${name} - ${W}Done${N}"
+  fi
 }
 
 enter_apk_dir() {
   echo -n "Enter APK Path:"
   read apkdir
   echo "Checking if file exists..."
-  sleep 0.3
   if [ -f "$apkdir" ]; then
     echo " - OK"
-    sleep 0.3
     apk=${apkdir##*/}
     echo "Checking if file is an APK..."
-    sleep 0.3
     tmpapk=${apk##*.}
     if [ "$tmpapk" == "apk" ]; then
       echo " - OK"
-      sleep 0.3
       echo "Checking package name..."
-      sleep 0.3
       name=${apk%'.apk'*}
       if [ $use_aapt ]; then
         name=$(aapt dump badging $apkdir | head -n1 | awk '{print $2}')
@@ -323,11 +325,8 @@ enter_apk_dir() {
       fi
       name=$(echo $name | tr -d ' ' | tr -d "'")
       echo " - $name"
-      sleep 0.3
       echo "Checking APK size..."
-      sleep 0.3
       chk_apk_size $apkdir
-      sleep 0.3
       if [ $privapp == 1 ] && [ $sysapp == 1 ]; then 
         echo "Where to install?"
         echo -n "< 1 - $SYSTEM/app | 2 - $SYSTEM/priv-app > : "
@@ -372,7 +371,6 @@ enter_apk_name() {
   if [ "$PKG" ]; then
     echo " - OK"
     echo "Checking APK size..."
-    sleep 0.3
 	apkdir=$DIR_APP
     chk_apk_size $apkdir
     if [ -d $SYSTEM/priv-app ]; then
@@ -420,12 +418,13 @@ revert_apps() {
 chk_apk_size() {
   dir_app=$(echo $1)
   if [ $(du -m $dir_app | awk '{print $1}') -gt $free_space ]; then
+    echo " Checking APK size"
     echo " - Insufficient $MOUNTPATH space!"
 	echo " - APK size: $(du -m $dir_app | awk '{print $1}')M | $MOUNTPATH Free: ${free_space}M"
     echo " - Using magisk_merge.img to merge images..."
     merge_img ${dir_app} 2>>$LOG
   else
-    echo " - $(du -m $dir_app | awk '{print $1}')M"
+    echo " Checking APK size - ${W}$(du -m $dir_app | awk '{print $1}')M${N}"
   fi
 }
 
@@ -484,54 +483,53 @@ if [ "$choice" == 1 ]; then
   echo " 0 -  Exit"
   echo -n "[CHOICE]: "
   read installed
-  if [ "$installed" -gt ${#app[@]} ] || [ "$installed" -lt 0 ] || [ "$installed" == "" ] || [ -n "$(echo $installed | tr -d '0-9')" ] ; then
-    echo "Invalid!"
-    exit 1
-  elif [ "$installed" == 0 ]; then
-    exit
-  else
-	get_cfg ${app[$installed]}
-	echo "Checking APK directory..."
-    sleep 0.3
-    if [ -f $DIR_APP ]; then
-   	  echo " - OK"
-      sleep 0.3
-      apkdir=$DIR_APP
-	  apk=${apkdir##*/}
-      name=${apkdir%/*}; name=${name##*/}; name=$(echo $name | tr -d ' ' | tr -d "'" | tr -d '*' | tr -d '-')
-      echo "Checking package name..."
-      sleep 0.3
-      echo " - $PKG"
-      sleep 0.3
-      echo "Checking APK size..."
-      sleep 0.3
-      chk_apk_size $apkdir
-      sleep 0.3
-      if [ $privapp == 1 ] && [ $sysapp == 1 ]; then 
-        echo "Where to install?"
-        echo -n "< 1 - $SYSTEM/app | 2 - $SYSTEM/priv-app > : "
-        read loc
-        if [ "$loc" == 1 ]; then
+  for i in $installed; do
+    if [ "$i" -gt ${#app[@]} ] || [ "$i" -lt 0 ] || [ "$i" == "" ] || [ -n "$(echo $i | tr -d '0-9')" ] ; then
+      echo "Invalid!"
+      exit 1
+    elif [ "$i" == 0 ]; then
+      exit
+    else
+	  echo "$div"
+	  echo "Systemizing ${W}${app[$i]}${N}" | tr '_' ' '
+	  get_cfg ${app[$i]}
+	  echo -n " Checking APK directory"
+      if [ -f $DIR_APP ]; then
+   	    echo " - ${W}OK${N}"
+        apkdir=$DIR_APP
+	    apk=${apkdir##*/}
+        name=${apkdir%/*}; name=${name##*/}; name=$(echo $name | tr -d ' ' | tr -d "'" | tr -d '*' | tr -d '-')
+        echo " Checking package name - ${W}$PKG${N}"
+        chk_apk_size $apkdir
+        if [ $privapp == 1 ] && [ $sysapp == 1 ]; then 
+          echo " Where to install?"
+          echo -n " < 1 - $SYSTEM/app | 2 - $SYSTEM/priv-app | 0 - cancel > : "
+          read loc
+          if [ "$loc" == 1 ]; then
+            systemize /system/app
+          elif [ "$loc" == 2 ]; then
+            systemize /system/priv-app
+		  elif [ "$loc" == 0 ]; then
+		    echo " ${app[$i]} canceled"; true
+          else
+            echo "Invalid!"
+            exit 3
+          fi
+        elif [ $sysapp == 1 ] && [ $privapp == 0 ]; then
           systemize /system/app
-        elif [ "$loc" == 2 ]; then
+        elif [ $privapp == 1 ] && [ $sysapp == 0 ]; then
           systemize /system/priv-app
         else
-          echo "Invalid!"
-          exit 3
-        fi
-      elif [ $sysapp == 1 ] && [ $privapp == 0 ]; then
-        systemize /system/app
-      elif [ $privapp == 1 ] && [ $sysapp == 0 ]; then
-        systemize /system/priv-app
+          echo " - No installation directory!"
+          exit 4
+        fi  
       else
-        echo "No installation directory!"
-        exit 4
-      fi  
-    else
-      echo "APK doesn't exist!"
-      exit 6
-    fi
-  fi
+        echo " - APK doesn't exist!"
+        exit 6
+      fi
+	fi
+  done
+  exit $?
 elif [ "$choice" == 2 ]; then
   clear
   enter_apk_name
@@ -547,6 +545,8 @@ elif [ "$choice" == 4 ]; then
 
 elif [ "$choice" == "d" ] || [ "$choice" == "D" ]; then
   am start https://paypal.me/veez21 >$LOG
+elif [ "$choice" == "logs" ]; then
+  upload_logs
 elif [ "$choice" == 0 ]; then
   exit
 else  echo "Invalid!"
