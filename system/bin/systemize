@@ -480,6 +480,7 @@ if [ "$choice" == 1 ]; then
     echo " ${Bl}$i${N} - ${W}${app[$i]}${N}" | tr '_' ' '
   done
   echo ""
+  echo " ${Bl}To systemize multiple apps, enter multiple number. Example:${N} \"1 $(echo ${#app[$((${#app[@]}/3))]}) $(echo ${#app[$((${#app[@]}/2))]})\""
   echo " 0 -  Exit"
   echo -n "[CHOICE]: "
   read installed
