@@ -7,13 +7,20 @@
 
 	systemize
 	
+ And you will be presented with a list of installed apps.
  And Reboot to apply changes.
 
 ## Error?
- Send `/cache/terminal_systemizer-verbose.log` in the XDA thread. I'll examine it for problems and will try to fix it.
+ Go to the menu and type `logs`, this will upload the log files of this module and will generate a link. Send that :)
+ Alternatively, Send `/cache/terminal_debloater-verbose.log` in the XDA thread. I'll examine it for problems and will try to fix it.
 
 ## Changelog
 
+### v12
+* Add Back to menu option
+* Logs can now be uploaded by entering `logs`
+* Other listed menus now have multiple option.
+* Misc improvements XD
 ### v11.3
 * Batch systemizing
 * New way of systemizing
