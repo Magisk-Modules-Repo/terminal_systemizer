@@ -16,24 +16,11 @@
 
 ## Changelog
 
+### v12.1
+* Fixed stuff related to busybox alias
 ### v12
 * Add Back to menu option
 * Logs can now be uploaded by entering `logs`
 * Other listed menus now have multiple option.
 * Misc improvements XD
-### v11.3
-* Batch systemizing
-* New way of systemizing
-* Misc
-### v11.2.1
-* Fixed updating through TWRP
-### v11.2
-* Systemized apps now persist when updating in Magisk Manager
-### v11.1
-* Fix xbin not getting deleted
-* Add Spinner when loading apps
-### v11
-* Sorted alphabetically (finally)
-* More efficient app detection (by default)
-* Fixed package name option
-* Cleaned some stuff
+
