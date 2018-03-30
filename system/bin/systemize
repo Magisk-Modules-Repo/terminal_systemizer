@@ -262,7 +262,8 @@ list_installed_apps() {
         c=$((c+1))
       fi
     done
-	app=($(printf '%s\n' "${app[@]}" | sort -f))
+    unset app[0] dir_app[0] package[0]
+    app=($(printf '%s\n' "${app[@]}" | sort -f))
 }
 
 # List systemized apps
