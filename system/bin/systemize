@@ -50,16 +50,16 @@ set_busybox() {
     _bb=$1
   fi
 }
-if [ ! -x $SYSTEM/xbin/busybox ]; then
-  _busybox=false
+_busybox=false
+if [ -d /sbin/.core/busybox ]; then
+  PATH=$PATH:/sbin/.core/busybox
+  _bb=/sbin/.core/busybox/busybox
+  _busybox=true
+elif [ ! -x $SYSTEM/xbin/busybox ]; then
   set_busybox /data/magisk/busybox
   set_busybox /data/adb/magisk/busybox
-  if [ -d /sbin/.core/busybox ]; then
-    PATH=$PATH:/sbin/.core/busybox
-    _busybox=true
-  else
-    alias busybox=""
-  fi
+else
+  alias busybox=""
 fi
 if [ -x $SYSTEM/xbin/busybox ]; then
   _bb=$SYSTEM/xbin/busybox
@@ -257,12 +257,13 @@ list_installed_apps() {
 	    package[$c]=$package
         dir_app[$c]=/data/app/$app-*/base.apk
         $use_aapt && { app=$(aapt dump badging ${dir_app[$c]} | grep 'application-label:'); app=${app#*:}; }
-        app[$c]=$(echo $app | tr ' ' '_' | tr -d "'")
-		echo "app${c}^=${app[$c]}^=${dir_app[$c]}^=${package[$c]}^=" >> $LISTFILE
+        app1[$c]=$(echo "$app" | tr ' ' '_' | tr -d "'")
+		echo "app${c}^=${app1[$c]}^=${dir_app[$c]}^=${package[$c]}^=" >> $LISTFILE
         c=$((c+1))
       fi
     done
-	app=($(printf '%s\n' "${app[@]}" | sort -f))
+	app2=($(echo "${app1[@]}" | sed "s/.*'//g"))
+	app=($(printf '%s\n' "${app2[@]}" | sort -f))
 }
 
 # List systemized apps
@@ -464,8 +465,8 @@ menu_list_systemized_apps() {
   echo "Installed Apps"
   echo "$div"
   echo ""
-  for i in $(seq 1 $((${#app[@]}-1))); do
-    echo " ${Bl}$i${N} - ${W}${app[$i]}${N}" | tr '_' ' '
+  for i in $(seq 0 $((${#app[@]}-1))); do
+    echo " ${Bl}$((i+1))${N} - ${W}${app[$i]}${N}" | tr '_' ' '
   done
   echo ""
   echo " ${Bl}To systemize multiple apps, enter multiple number. Example:${N} \"1 $(echo ${#app[$((${#app[@]}/3))]}) $(echo ${#app[$((${#app[@]}/2))]})\""
@@ -482,6 +483,7 @@ menu_list_systemized_apps() {
       exit
     else
 	  echo "$div"
+	  i=$((i-1))
 	  echo "Systemizing ${W}${app[$i]}${N}" | tr '_' ' '
 	  get_cfg ${app[$i]}
 	  echo -n " Checking APK directory"

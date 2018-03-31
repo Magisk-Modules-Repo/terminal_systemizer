@@ -16,6 +16,8 @@
 
 ## Changelog
 
+### v12.2
+* Fixed quirks when listing app names
 ### v12.1
 * Fixed stuff related to busybox alias
 ### v12
