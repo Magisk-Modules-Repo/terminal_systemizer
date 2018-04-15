@@ -227,7 +227,7 @@ LISTFILE=/cache/systemize.list
 
 # Use aapt if present
 if [ -x $SYSTEM/bin/aapt ] || [ -x $SYSTEM/xbin/aapt ] || [ -x /sbin/aapt ] || [ -x $MODDIR/aapt ]; then
-  export PATH=$PATH:$MODDIR
+  export PATH=$MODDIR:$PATH
   use_aapt=true
 fi
 
@@ -295,10 +295,11 @@ systemize() {
   if [ "$2" ]; then
     apkdir="$2"
     apk=${apkdir##*/}
+	[ "$3" ] && PKG="$3"
 	if [ "$PKG" ]; then
 	  name=$PKG
 	else
-      name=${apkdir%/*}; name=${name##*/}
+	  name=${apkdir%/*}; name=${name##*/}
       name=$(echo $name | tr -d ' ' | tr -d "'" | tr -d '*' | tr -d '-')
 	fi
   fi
@@ -606,7 +607,7 @@ menu() {
 
 case "$1" in
 	-a) shift
-		for i in "$@"; do systemize /system/priv-app $(echo /data/app/${i}-*/base.apk); echo "$div"; done; exit;;
+		for i in "$@"; do systemize /system/priv-app /data/app/${i}-*/base.apk "$i"; echo "$div"; done; exit;;
 	-d) shift
 		for i in "$@"; do systemize /system/priv-app "$i"; echo "$div"; done; exit;;
 esac
