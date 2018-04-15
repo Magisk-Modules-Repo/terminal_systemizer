@@ -293,7 +293,7 @@ get_cfg() {
 # Usage: systemize <install directory> <apk directory>
 systemize() {
   if [ "$2" ]; then
-    apkdir="$2"
+    apkdir="$(echo $2)"
     apk=${apkdir##*/}
 	[ "$3" ] && PKG="$3"
 	if [ "$PKG" ]; then
@@ -301,9 +301,13 @@ systemize() {
 	else
 	  name=${apkdir%/*}; name=${name##*/}
       name=$(echo $name | tr -d ' ' | tr -d "'" | tr -d '*' | tr -d '-')
+	  $use_aapt && {
+        name=$(aapt dump badging $apkdir | head -n1 | awk '{print $2}')
+        name=$(echo ${name#*=} | tr -d ' ' | tr -d "'")
+	  }
 	fi
   fi
-  echo " Transfering ${apk}($name) to '$1'..."
+  echo " Transfering ${apk}(${name}) to '$1'..."
   if [ -d $SYSTEM/app/${name} ] || [ -d $SYSTEM/priv-app/${name} ] || [ -d $MODDIR$SYSTEM2/app/${name} ] || [ -d $MODDIR$SYSTEM2/priv-app/${name} ]; then
     echo " App exists!"
     #exit 5
@@ -607,7 +611,7 @@ menu() {
 
 case "$1" in
 	-a) shift
-		for i in "$@"; do systemize /system/priv-app /data/app/${i}-*/base.apk "$i"; echo "$div"; done; exit;;
+		for i in "$@"; do systemize /system/priv-app "/data/app/${i}-*/base.apk" "$i"; echo "$div"; done; exit;;
 	-d) shift
 		for i in "$@"; do systemize /system/priv-app "$i"; echo "$div"; done; exit;;
 esac
