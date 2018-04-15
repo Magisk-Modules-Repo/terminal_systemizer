@@ -111,6 +111,7 @@ spinner() {
   h=0; anim='-\|/'; 
   while [ -d /proc/$PID ]; do
 	h=$(((h+1)%4))
+	sleep 0.02
 	printf "\r$@ [${anim:$h:1}]"
   done
 }
@@ -191,7 +192,7 @@ N='\e[00;37;40m' # How to use (example): echo "${G}example${N}"
 
 # Remove colors if -nc
 [ "$1" == "-nc" ] && {
-  G=''; R=''; Y=''; B=''; V=''; Bl=''; C=''; W=''; N=''
+  G=''; R=''; Y=''; B=''; V=''; Bl=''; C=''; W=''; N=''; shift;
 }
 
 # Divider (based on $MODTITLE, $VER, and $REL characters)
@@ -602,6 +603,13 @@ menu() {
     exit 1
   fi
 }
+
+case "$1" in
+	-a) shift
+		for i in "$@"; do systemize /system/priv-app $(echo /data/app/${i}-*/base.apk); echo "$div"; done; exit;;
+	-d) shift
+		for i in "$@"; do systemize /system/priv-app "$i"; echo "$div"; done; exit;;
+esac
 
 menu
 exit $?
