@@ -189,9 +189,10 @@ C='\e[01;36m'    # CYAN
 W='\e[01;37m'    # WHITE
 N='\e[00;37;40m' # How to use (example): echo "${G}example${N}"
 
-# Remove colors if -nc
-[ "$1" == "-nc" ] && {
-  G=''; R=''; Y=''; B=''; V=''; Bl=''; C=''; W=''; N=''; shift;
+# Remove colors if -nc or in ADB Shell
+[ -n "$1" -a "$1" == "-nc" ] && shift && NC=true
+[ "$NC" -o -n "$LOGNAME" ] && {
+	G=''; R=''; Y=''; B=''; V=''; Bl=''; C=''; W=''; N='';
 }
 
 # Divider (based on $MODTITLE, $VER, and $REL characters)
@@ -213,6 +214,23 @@ mod_head() {
 # > You can start your MOD here.
 # > You can add functions, variables & etc.
 # > Rather than editing the default vars above.
+
+help_me() {
+	cat << EOF
+$MODTITLE $VER($REL)
+by $AUTHOR
+	
+Usage: $_name
+   or: $_name [options]...
+   
+Options:
+    -nc                    removes ANSI escape codes
+    -a [package name]      systemizes the package name(s) provided
+    -d [apk dir]           systemizes the apk(s) provided
+    -h                     show this message
+EOF
+exit
+}
 
 use_aapt=false
 sysapp=0
@@ -613,6 +631,7 @@ case "$1" in
 		for i in "$@"; do systemize /system/priv-app "/data/app/${i}-*/base.apk" "$i"; echo "$div"; done; exit;;
 	-d) shift
 		for i in "$@"; do systemize /system/priv-app "$i"; echo "$div"; done; exit;;
+	-h|--help) help_me
 esac
 
 menu
