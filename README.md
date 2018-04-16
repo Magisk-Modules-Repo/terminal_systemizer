@@ -16,6 +16,12 @@
 
 ## Changelog
 
+### v13
+* Add -a option to directly systemize a given package name
+* Add -d option to directly systemize a given apk
+* Automatically disable ANSI codes (the colors) when in ADB shell
+* Add help message
+* Misc
 ### v12.2
 * Fixed quirks when listing app names
 ### v12.1
