@@ -231,6 +231,7 @@ Options:
     -nc                    removes ANSI escape codes
     -a [package name]      systemizes the package name(s) provided
     -d [apk dir]           systemizes the apk(s) provided
+    -l                     list all systemized apps
     -h                     show this message
 EOF
 exit
@@ -291,7 +292,7 @@ list_installed_apps() {
 
 # List systemized apps
 list_systemized_apps() {
-	systemized_apps=($(find $MODDIR -name "*.apk"))
+	systemized_apps=($(find $MODDIR -name "*.apk" -type f))
 	cc=1
 	for i in ${systemized_apps[@]}; do
 		ProgressBar $cc ${#systemized_apps[@]}
@@ -616,6 +617,11 @@ case "$1" in
 		for i in "$@"; do systemize /system/priv-app "/data/app/${i}-*/base.apk" "$i"; echo "$div"; done; exit;;
 	-d) shift
 		for i in "$@"; do systemize /system/priv-app "$i"; echo "$div"; done; exit;;
+	-l) list_systemized_apps 2>>$LOG
+		for i in ${!rev_dir[@]}; do
+			echo "$(echo ${rev_app[$i]}| tr '_' ' ') - ${rev_label[$i]} - $(echo ${rev_dir[$i]} | sed 's/.*\/system/./g')"
+		done
+		exit;;
 	-h|--help) help_me;;
 esac
 
