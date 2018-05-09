@@ -247,6 +247,7 @@ mkdir -p $MODDIR$SYSTEM2/etc/permissions 2>/dev/null
 API=$(grep_prop ro.build.version.sdk $SYSTEM/build.prop)
 LISTFILE=/cache/systemize.list
 BOOTMODE=true
+RESCAN=true
 
 # Use aapt if present
 if [ -x $SYSTEM/bin/aapt ] || [ -x $SYSTEM/xbin/aapt ] || [ -x /sbin/aapt ] || [ -x $MODDIR/aapt ]; then
@@ -270,24 +271,27 @@ total_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $2}')"
 
 # List installed apps
 list_installed_apps() {
-	rm $LISTFILE 2>$LOG
-	c=1; h=0; anim='-\|/';
-	for i in $(ls /data/data); do
-		h=$(((h+1)%4))
-		printf "\rLoading Apps [${anim:$h:1}]"
-		if ! dumpsys package $i | grep -qEm1 -e "(codePath=/system|targetSdk=0|codePath=/vendor/overlay|codePath=$SYSTEM)" - ; then
-			app=${i##*/}
-			package=$app
-			package[$c]=$package
-			dir_app[$c]=/data/app/$app-*/base.apk
-			$use_aapt && { app=$(aapt dump badging ${dir_app[$c]} | grep 'application-label:'); app=${app#*:}; }
-			app1[$c]=$(echo "$app" | tr ' ' '_' | tr -d "'")
-			echo "app${c}^=${app1[$c]}^=${dir_app[$c]}^=${package[$c]}^=" >> $LISTFILE
-			c=$((c+1))
-		fi
-	done
-	app2=($(echo "${app1[@]}" | sed "s/.*'//g"))
-	app=($(printf '%s\n' "${app2[@]}" | sort -f))
+	if $RESCAN; then
+		rm $LISTFILE 2>$LOG
+		c=1; h=0; anim='-\|/';
+		for i in $(ls /data/data); do
+			h=$(((h+1)%4))
+			printf "\rLoading Apps [${anim:$h:1}]"
+			if ! dumpsys package $i | grep -qEm1 -e "(codePath=/system|targetSdk=0|codePath=/vendor/overlay|codePath=$SYSTEM)" - ; then
+				app=${i##*/}
+				package=$app
+				package[$c]=$package
+				dir_app[$c]=/data/app/$app-*/base.apk
+				$use_aapt && { app=$(aapt dump badging ${dir_app[$c]} | grep 'application-label:'); app=${app#*:}; }
+				app1[$c]=$(echo "$app" | tr ' ' '_' | tr -d "'")
+				echo "app${c}^=${app1[$c]}^=${dir_app[$c]}^=${package[$c]}^=" >> $LISTFILE
+				c=$((c+1))
+			fi
+		done
+		app2=($(echo "${app1[@]}" | sed "s/.*'//g"))
+		app=($(printf '%s\n' "${app2[@]}" | sort -f))
+		RESCAN=false
+	fi
 }
 
 # List systemized apps
@@ -473,7 +477,7 @@ busybox mount -o rw,remount /cache 2>$LOG
 
 menu_list_systemized_apps() {
 	clear
-	list_installed_apps 2>$LOG
+	list_installed_apps 2>>$LOG
 	clear
 	echo "$div"
 	echo "Installed Apps"
@@ -485,10 +489,12 @@ menu_list_systemized_apps() {
 	echo ""
 	echo " ${Bl}To systemize multiple apps, enter multiple number. Example:${N} \"1 $(echo ${#app[$((${#app[@]}/3))]}) $(echo ${#app[$((${#app[@]}/2))]})\""
 	echo " x - ${Bl}Back to Menu${N}"
+	echo " r - Refresh list"
 	echo " 0 -  Exit"
 	echo -n "[CHOICE]: "
 	read installed
 	[ "$installed" == "x" ] && menu
+	[ "$installed" == "r" ] && RESCAN=true && menu_list_systemized_apps
 	for i in $installed; do
 		if [ "$i" -gt ${#app[@]} ] || [ "$i" -lt 0 ] || [ "$i" == "" ] || [ -n "$(echo $i | tr -d '0-9')" ] ; then
 			abort "Invalid!"
