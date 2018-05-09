@@ -449,11 +449,7 @@ chk_apk_size() {
 # Merge
 merge_img() {
 	apk_size=$(($(du -m $1 | awk '{print $1}')+2))
-	if [ "$(grep_prop minMagisk $MODDIR/module.prop)" -ge "1500" ]; then
-		IMG=/data/adb/magisk_merge.img
-	else
-		IMG=/data/magisk_merge.img
-	fi
+	IMG=/data/adb/magisk_merge.img
 	install_dir=/dev/tmp/${ID}
 	path=/dev/magisk_merge
 	tmpmodpath=$path/${ID}
