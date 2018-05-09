@@ -16,6 +16,11 @@
 
 ## Changelog
 
+### v13.1
+* Add -l option to list systemized apps
+* Apps doesn't get refreshed if you go back to menu
+* Add "Refresh list" option in app list menu
+* Misc improvements
 ### v13
 * Add -a option to directly systemize a given package name
 * Add -d option to directly systemize a given apk
