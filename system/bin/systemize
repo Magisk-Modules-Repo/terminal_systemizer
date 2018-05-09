@@ -199,7 +199,7 @@ loadBar=' '			# Load UI
 }
 
 # Divider (based on $MODTITLE, $VER, and $REL characters)
-div="${BGBL}$(printf '%*s' "$(echo $MODTITLE $VER $REL | tr " " '_' | wc -c)" '' | tr " " "=")${N}"
+div="${Bl}$(printf '%*s' "$(echo $MODTITLE $VER $REL | tr " " '_' | wc -c)" '' | tr " " "=")${N}"
 
 # Heading
 mod_head() {
