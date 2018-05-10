@@ -83,65 +83,10 @@ if [ "$_bbname" == "" ]; then
 	BBok=false
 fi
 
-#=========================== Default Functions
+#=========================== Default Functions and Variables
 
-# set_file_prop <property> <value> <prop.file>
-set_file_prop() {
-	sed -i "s/${1}=.*/${1}=${2}/g" $3
-}
-
-# https://github.com/fearside/ProgressBar
-ProgressBar() {
-# Process data
-	_progress=$(((${1}*100/${2}*100)/100))
-	_done=$(((${_progress}*4)/10))
-	_left=$((40-$_done))
-# Build progressbar string lengths
-	_done=$(printf "%${_done}s")
-	_left=$(printf "%${_left}s")
-
-# 1.2 Build progressbar strings and print the ProgressBar line
-# 1.2.1 Output example:
-# 1.2.1.1 Progress : [########################################] 100%
-printf "\rProgress : ${BGBL}|${N}${_done// /${BGBL}$loadBar${N}}${_left// / }${BGBL}|${N} ${_progress}%%"
-}
-
-# "cmd & spinner [message]"
-spinner() {
-	PID=$!
-	h=0; anim='-\|/'; 
-	while [ -d /proc/$PID ]; do
-		h=$(((h+1)%4))
-		sleep 0.02
-		printf "\rLoading [${anim:$h:1}]"
-	done
-}
-
-# Log files will be uploaded to termbin.com
-upload_logs() {
-	$BBok && {
-		echo -n "Testing internet connection "
-		ping -q -c 1 -W 1 google.com >/dev/null 2>/dev/null && echo "- OK" || { echo "Error"; exit 1; }
-		verUp=none; oldverUp=none; logUp=none; oldlogUp=none;
-		echo "Uploading logs"
-		[ -s $VERLOG ] && verUp=$(cat $VERLOG | nc termbin.com 9999)
-		[ -s $oldVERLOG ] && oldverUp=$(cat $oldVERLOG | nc termbin.com 9999)
-		[ -s $LOG ] && logUp=$(cat $LOG | nc termbin.com 9999)
-		[ -s $oldLOG ] && oldlogUp=$(cat $oldLOG | nc termbin.com 9999)
-		echo -n "Link: "
-		echo "$MODEL ($DEVICE) API $API\n$ROM\n$ID\n
-		O_Verbose: $oldverUp
-		Verbose:   $verUp
-	
-		O_Log: $oldlogUp
-		Log:   $logUp" | nc termbin.com 9999
-	} || echo "Busybox not found!"
-	exit
-}
-
-#=========================== Default Variables
-# > Stuff here is used for some other stuff
-# > Edit only if necessary!
+# Import util_functions.sh
+[ -f /data/adb/magisk/util_functions.sh ] && . /data/adb/magisk/util_functions.sh || exit 1
 
 # Magisk Mod Directory
 MOUNTPATH=/magisk
@@ -159,9 +104,6 @@ if [ ! -d $MODDIR ]; then
 		exit 1
 	fi
 fi
-
-# Import util_functions.sh
-[ -f /data/adb/magisk/util_functions.sh ] && . /data/adb/magisk/util_functions.sh || exit 1
 
 # Device Info
 # BRAND MODEL DEVICE API ABI ABI2 ABILONG ARCH
@@ -199,7 +141,69 @@ loadBar=' '			# Load UI
 }
 
 # Divider (based on $MODTITLE, $VER, and $REL characters)
-div="${Bl}$(printf '%*s' "$(echo $MODTITLE $VER $REL | tr " " '_' | wc -c)" '' | tr " " "=")${N}"
+character_no=$(echo $MODTITLE $VER $REL | tr " " '_' | wc -c)
+div="${Bl}$(printf '%*s' "${character_no}" '' | tr " " "=")${N}"
+
+# Title Div :3
+title_div() {
+	no=$(echo $@ | wc -c)
+	extdiv=$((no-character_no))
+	echo "${W}$@${N} ${Bl}$(printf '%*s' "$character_no" '' | tr " " "=")${N}"
+}
+
+# set_file_prop <property> <value> <prop.file>
+set_file_prop() {
+	sed -i "s/${1}=.*/${1}=${2}/g" $3
+}
+
+# https://github.com/fearside/ProgressBar
+ProgressBar() {
+# Process data
+	_progress=$(((${1}*100/${2}*100)/100))
+	_done=$(((${_progress}*4)/10))
+	_left=$((40-$_done))
+# Build progressbar string lengths
+	_done=$(printf "%${_done}s")
+	_left=$(printf "%${_left}s")
+
+# 1.2 Build progressbar strings and print the ProgressBar line
+# 1.2.1 Output example:
+# 1.2.1.1 Progress : [########################################] 100%
+printf "\rProgress : ${BGBL}|${N}${_done// /${BGBL}$loadBar${N}}${_left// / }${BGBL}|${N} ${_progress}%%"
+}
+
+# "cmd & spinner [message]"
+spinner() {
+	PID=$!
+	h=0; anim='-\|/';
+	while [ -d /proc/$PID ]; do
+		h=$(((h+1)%4))
+		sleep 0.02
+		printf "\rLoading [${anim:$h:1}]"
+	done
+}
+
+# Log files will be uploaded to termbin.com
+upload_logs() {
+	$BBok && {
+		echo -n "Testing internet connection "
+		ping -q -c 1 -W 1 google.com >/dev/null 2>/dev/null && echo "- OK" || { echo "Error"; exit 1; }
+		verUp=none; oldverUp=none; logUp=none; oldlogUp=none;
+		echo "Uploading logs"
+		[ -s $VERLOG ] && verUp=$(cat $VERLOG | nc termbin.com 9999)
+		[ -s $oldVERLOG ] && oldverUp=$(cat $oldVERLOG | nc termbin.com 9999)
+		[ -s $LOG ] && logUp=$(cat $LOG | nc termbin.com 9999)
+		[ -s $oldLOG ] && oldlogUp=$(cat $oldLOG | nc termbin.com 9999)
+		echo -n "Link: "
+		echo "$MODEL ($DEVICE) API $API\n$ROM\n$ID\n
+		O_Verbose: $oldverUp
+		Verbose:   $verUp
+	
+		O_Log: $oldlogUp
+		Log:   $logUp" | nc termbin.com 9999
+	} || echo "Busybox not found!"
+	exit
+}
 
 # Heading
 mod_head() {
@@ -624,6 +628,7 @@ case "$1" in
 	-d) shift
 		for i in "$@"; do systemize /system/priv-app "$i"; echo "$div"; done; exit;;
 	-l) list_systemized_apps 2>>$LOG
+		echo
 		for i in ${!rev_dir[@]}; do
 			echo "$(echo ${rev_app[$i]}| tr '_' ' ') - ${rev_label[$i]} - $(echo ${rev_dir[$i]} | sed 's/.*\/system/./g')"
 		done
