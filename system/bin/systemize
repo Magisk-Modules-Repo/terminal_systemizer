@@ -484,7 +484,7 @@ menu_list_systemized_apps() {
 	list_installed_apps 2>>$LOG
 	clear
 	echo "$div"
-	echo "Installed Apps"
+	title_div "Installed Apps"
 	echo "$div"
 	echo ""
 	for i in $(seq 0 $((${#app[@]}-1))); do
@@ -552,7 +552,7 @@ revert_apps() {
 	list_systemized_apps 2>$LOG
 	clear
 	echo "$div"
-	echo "Revert"
+	title_div "Revert"
 	echo "$div"
 	echo ""
 	for i in $(seq 1 $((${#rev_app[@]}-1))); do
