@@ -16,6 +16,9 @@
 
 ## Changelog
 
+### v13.2
+* Systemized app listing looks better and much more readable :3
+* Misc improvements
 ### v13.1
 * Add -l option to list systemized apps
 * Apps doesn't get refreshed if you go back to menu
