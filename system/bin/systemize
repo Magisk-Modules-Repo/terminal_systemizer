@@ -630,7 +630,8 @@ case "$1" in
 	-l) list_systemized_apps 2>>$LOG
 		echo
 		for i in ${!rev_dir[@]}; do
-			echo "$(echo ${rev_app[$i]}| tr '_' ' ') - ${rev_label[$i]} - $(echo ${rev_dir[$i]} | sed 's/.*\/system/./g')"
+			title_div "App $i"
+			echo "Name\t: $(echo ${rev_app[$i]}| tr '_' ' ')\nLabel\t: ${rev_label[$i]}\nDirectory\t: $(echo ${rev_dir[$i]} | sed 's/.*\/system\///g')" | expand -t 10
 		done
 		exit;;
 	-h|--help) help_me;;
