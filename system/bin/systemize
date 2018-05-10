@@ -148,7 +148,7 @@ div="${Bl}$(printf '%*s' "${character_no}" '' | tr " " "=")${N}"
 title_div() {
 	no=$(echo $@ | wc -c)
 	extdiv=$((no-character_no))
-	echo "${W}$@${N} ${Bl}$(printf '%*s' "$character_no" '' | tr " " "=")${N}"
+	echo "${W}$@${N} ${Bl}$(printf '%*s' "$extdiv" '' | tr " " "=")${N}"
 }
 
 # set_file_prop <property> <value> <prop.file>
