@@ -265,14 +265,10 @@ if [ -x $SYSTEM/bin/aapt ] || [ -x $SYSTEM/xbin/aapt ] || [ -x /sbin/aapt ] || [
 fi
 
 # Detect if /system/app is available
-if [ -d $SYSTEM/app ]; then
-	sysapp=1
-fi
+[ -d $SYSTEM/app ] && sysapp=1
 
 # Detect if /system/priv-app is available
-if [ -d $SYSTEM/priv-app ]; then
-	privapp=1
-fi
+[ -d $SYSTEM/priv-app ] && privapp=1
 
 # /magisk free space
 free_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $4}')"
