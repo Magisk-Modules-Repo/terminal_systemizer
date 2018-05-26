@@ -626,9 +626,9 @@ menu() {
 
 case "$1" in
 	-a) shift
-		for i in "$@"; do systemize /system/priv-app "/data/app/${i}-*/base.apk" "$i"; echo "$div"; done; exit;;
+		for i in "$@"; do [ -d $SYSTEM/priv-app ] && systemize /system/priv-app "/data/app/${i}-*/base.apk" || systemize /system/app "/data/app/${i}-*/base.apk" "$i"; echo "$div"; done; exit;;
 	-d) shift
-		for i in "$@"; do systemize /system/priv-app "$i"; echo "$div"; done; exit;;
+		for i in "$@"; do [ -d $SYSTEM/priv-app ] && systemize /system/priv-app "$i" || systemize /system/app "$i"; echo "$div"; done; exit;;
 	-l) list_systemized_apps 2>>$LOG
 		echo
 		for i in ${!rev_dir[@]}; do
