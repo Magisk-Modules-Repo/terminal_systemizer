@@ -270,10 +270,6 @@ fi
 # Detect if /system/priv-app is available
 [ -d $SYSTEM/priv-app ] && privapp=1
 
-# /magisk free space
-free_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $4}')"
-total_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $2}')"
-
 # List installed apps
 list_installed_apps() {
 	if $RESCAN; then
@@ -445,6 +441,8 @@ enter_apk_name() {
 # Check apk size
 chk_apk_size() {
 	dir_app=$(echo $1)
+	free_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $4}')"
+	total_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $2}')"
 	if [ $(du -m $dir_app | awk '{print $1}') -gt $free_space ]; then
 		echo " Checking APK size"
 		echo "- Insufficient $MOUNTPATH space!"
