@@ -253,7 +253,6 @@ perm_xml1=$SYSTEM/etc/permissions/privapp-permissions-platform.xml
 perm_xml=$MODDIR$SYSTEM2/etc/permissions/privapp-permissions-platform.xml
 [ -f $perm_xml1 ] && patch_xml=true || patch_xml=false
 mkdir -p $MODDIR$SYSTEM2/etc/permissions 2>/dev/null
-API=$(grep_prop ro.build.version.sdk $SYSTEM/build.prop)
 LISTFILE=/cache/systemize.list
 BOOTMODE=true
 RESCAN=true
