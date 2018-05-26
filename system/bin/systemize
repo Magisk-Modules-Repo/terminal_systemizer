@@ -287,7 +287,7 @@ list_installed_apps() {
 				package=$app
 				package[$c]=$package
 				dir_app[$c]=/data/app/$app-*/base.apk
-				$use_aapt && { app=$(aapt dump badging ${dir_app[$c]} | grep 'application-label:'); app=${app#*:}; }
+				$use_aapt && { app=$(aapt d badging ${dir_app[$c]} | grep 'application-label:'); app=${app#*:}; }
 				app1[$c]=$(echo "$app" | tr ' ' '_' | tr -d "'")
 				echo "app${c}^=${app1[$c]}^=${dir_app[$c]}^=${package[$c]}^=" >> $LISTFILE
 				c=$((c+1))
@@ -309,7 +309,7 @@ list_systemized_apps() {
 		rev_label[$cc]=${i%/*}
 		rev_label[$cc]=${rev_label[$cc]##*/}
 		rev_app[$cc]=${rev_label[$cc]}
-		$use_aapt && { rev_app=$(aapt dump badging $i | grep 'application-label:'); rev_app=${rev_app#*:}; rev_app[$cc]=$(echo $rev_app | tr ' ' '_' | tr -d "'"); }
+		$use_aapt && { rev_app=$(aapt d badging $i | grep 'application-label:'); rev_app=${rev_app#*:}; rev_app[$cc]=$(echo $rev_app | tr ' ' '_' | tr -d "'"); }
 		cc=$((cc+1))
 	done
 }
@@ -335,7 +335,7 @@ systemize() {
 			name=${apkdir%/*}; name=${name##*/}
 			name=$(echo $name | tr -d ' ' | tr -d "'" | tr -d '*' | tr -d '-')
 			$use_aapt && {
-				name=$(aapt dump badging $apkdir | head -n1 | awk '{print $2}')
+				name=$(aapt d badging $apkdir | head -n1 | awk '{print $2}')
 				name=$(echo ${name#*=} | tr -d ' ' | tr -d "'")
 			}
 		fi
@@ -381,7 +381,7 @@ enter_apk_dir() {
 			echo "Checking package name..."
 			name=${apk%'.apk'*}
 			if [ $use_aapt ]; then
-				name=$(aapt dump badging $apkdir | head -n1 | awk '{print $2}')
+				name=$(aapt d badging $apkdir | head -n1 | awk '{print $2}')
 				name=${name#*=}
 			fi
 			name=$(echo $name | tr -d ' ' | tr -d "'")
