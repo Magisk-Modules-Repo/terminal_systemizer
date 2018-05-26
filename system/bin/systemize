@@ -270,6 +270,10 @@ fi
 # Detect if /system/priv-app is available
 [ -d $SYSTEM/priv-app ] && privapp=1
 
+# Detect free space
+free_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $4}')"
+total_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $2}')"
+
 # List installed apps
 list_installed_apps() {
 	if $RESCAN; then
