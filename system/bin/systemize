@@ -351,11 +351,11 @@ systemize() {
 			echo " Granting Permissions"
 			pp=0
 			app_perm=()
-			for i in $(aapt d permissions $apkdir | awk '{print $2}'); do
+			for i in $(aapt d permissions $apkdir | grep user-permission | awk '{print $2}'); do
 				pp=$((pp+1))
 				if [ $pp -ne 1 ]; then
-					_perm=${i#*=}
-					app_perm[$pp]=$(echo $_perm | tr -d "'")
+					_perm=$(echo ${i#*=} | tr -d "'")
+					app_perm[$pp]=$_perm
 				fi
 			done
 			echo "<?xml version=\"1.0\" encoding=\"utf-8\"?><permissions><privapp-permissions package=\"${name}\">" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
