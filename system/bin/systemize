@@ -340,6 +340,7 @@ systemize() {
 			}
 		fi
 	fi
+	chk_apk_size $apkdir
 	echo " Transfering ${apk}(${name}) to '$1'..."
 	if [ -d $SYSTEM/app/${name} ] || [ -d $SYSTEM/priv-app/${name} ] || [ -d $MODDIR$SYSTEM2/app/${name} ] || [ -d $MODDIR$SYSTEM2/priv-app/${name} ]; then
 		abort " App exists!"
@@ -446,9 +447,9 @@ chk_apk_size() {
 	dir_app=$(echo $1)
 	if [ $(du -m $dir_app | awk '{print $1}') -gt $free_space ]; then
 		echo " Checking APK size"
-		echo " - Insufficient $MOUNTPATH space!"
-		echo " - APK size: $(du -m $dir_app | awk '{print $1}')M | $MOUNTPATH Free: ${free_space}M"
-		echo " - Using magisk_merge.img to merge images..."
+		echo "- Insufficient $MOUNTPATH space!"
+		echo "- APK size: $(du -m $dir_app | awk '{print $1}')M | $MOUNTPATH Free: ${free_space}M"
+		echo "- Using magisk_merge.img to merge images..."
 		merge_img ${dir_app} 2>>$LOG
 	else
 		echo " Checking APK size - ${W}$(du -m $dir_app | awk '{print $1}')M${N}"
@@ -516,7 +517,6 @@ menu_list_systemized_apps() {
 				apk=${apkdir##*/}
 				name=${apkdir%/*}; name=${name##*/}; name=$(echo $name | tr -d ' ' | tr -d "'" | tr -d '*' | tr -d '-')
 				echo " Checking package name - ${W}$PKG${N}"
-				chk_apk_size $apkdir
 				if [ $privapp == 1 ] && [ $sysapp == 1 ]; then 
 					echo " Where to install?"
 					echo -n " < 1 - $SYSTEM/app | 2 - $SYSTEM/priv-app | 0 - cancel > : "
