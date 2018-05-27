@@ -350,12 +350,13 @@ systemize() {
 		$patch_xml && [ ${1##*/} == "priv-app" ] && {
 			echo " Granting Permissions"
 			pp=0
-			app_perm=()
+			app_perm=(); perm=()
 			for i in $(aapt d permissions $apkdir | grep -v 'package:' | awk '{print $2}'); do
 				_perm=$(echo ${i#*=} | tr -d "'")
-				app_perm[$pp]=$_perm
+				perm[$pp]=$_perm
 				pp=$((pp+1))
 			done
+			app_perm=($(echo "${perm[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
 			echo "<?xml version=\"1.0\" encoding=\"utf-8\"?><permissions><privapp-permissions package=\"${name}\">" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
 			for i in ${app_perm[@]}; do
 				echo "<permission name=\"$i\"/>" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml

@@ -16,6 +16,9 @@
 
 ## Changelog
 
+### v13.3
+* Fixed generating permissions
+* Misc improvements
 ### v13.2
 * Systemized app listing looks better and much more readable :3
 * Misc improvements
