@@ -415,6 +415,7 @@ enter_apk_dir() {
 
 enter_apk_name() {
 	echo "Enter the App Label of the installed app"
+	echo "Example: com.android.launcher"
 	echo -n " > "
 	read apklabel
 	if [ ! "$apklabel" ]; then
