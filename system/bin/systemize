@@ -369,7 +369,7 @@ systemize() {
 }
 
 enter_apk_dir() {
-	echo -n "Enter APK Path:"
+	echo -n "Enter APK Path: "
 	read apkdir
 	echo "Checking if file exists..."
 	if [ -f "$apkdir" ]; then
@@ -387,8 +387,6 @@ enter_apk_dir() {
 			fi
 			name=$(echo $name | tr -d ' ' | tr -d "'")
 			echo " - $name"
-			echo "Checking APK size..."
-			chk_apk_size $apkdir
 			if [ $privapp == 1 ] && [ $sysapp == 1 ]; then 
 				echo "Where to install?"
 				echo -n "< 1 - $SYSTEM/app | 2 - $SYSTEM/priv-app > : "
@@ -427,9 +425,7 @@ enter_apk_name() {
 	get_cfg $apklabel
 	if [ "$PKG" ]; then
 		echo " - OK"
-		echo "Checking APK size..."
 		apkdir=$DIR_APP
-		chk_apk_size $apkdir
 		if [ -d $SYSTEM/priv-app ]; then
 			installdir="priv-app"
 		else
