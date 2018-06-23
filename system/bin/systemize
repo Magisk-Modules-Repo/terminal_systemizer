@@ -297,7 +297,7 @@ list_installed_apps() {
 		for i in $(ls /data/data); do
 			h=$(((h+1)%4))
 			Spinner "Loading Apps"
-			if ! dumpsys package $i | grep -qEm1 -e "(codePath=/system|targetSdk=0|codePath=/vendor/overlay|codePath=$SYSTEM)" - ; then
+			if ! dumpsys package $i | grep -qEm1 -e "(codePath=$SYSTEM|targetSdk=0|codePath=/vendor/overlay)" - ; then
 				app=${i##*/}
 				package=$app
 				package[$c]=$package
