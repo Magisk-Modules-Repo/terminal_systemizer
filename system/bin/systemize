@@ -185,7 +185,7 @@ case ${_indicator} in
 esac
 
 # Print simple progress spinner
-printf "\r${_indicator}"
+printf "\r${@} [${_indicator}]"
 }
 
 # "cmd & spinner [message]"
@@ -294,10 +294,9 @@ total_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $2}')"
 list_installed_apps() {
 	if $RESCAN; then
 		rm $LISTFILE 2>$LOG; app=(); app1=(); app2=();
-		c=1; h=0; anim='-\|/';
 		for i in $(ls /data/data); do
 			h=$(((h+1)%4))
-			printf "\rLoading Apps [${anim:$h:1}]"
+			Spinner "Loading Apps"
 			if ! dumpsys package $i | grep -qEm1 -e "(codePath=/system|targetSdk=0|codePath=/vendor/overlay|codePath=$SYSTEM)" - ; then
 				app=${i##*/}
 				package=$app
