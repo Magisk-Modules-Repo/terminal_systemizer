@@ -171,8 +171,25 @@ ProgressBar() {
 printf "\rProgress : ${BGBL}|${N}${_done// /${BGBL}$loadBar${N}}${_left// / }${BGBL}|${N} ${_progress}%%"
 }
 
+#https://github.com/fearside/SimpleProgressSpinner
+Spinner() {
+
+# Choose which character to show.
+case ${_indicator} in
+	"|") _indicator="/";;
+	"/") _indicator="-";;
+	"-") _indicator="\\";;
+	"\\") _indicator="|";;
+	# Initiate spinner character
+	*) _indicator="\\";;
+esac
+
+# Print simple progress spinner
+printf "\r${_indicator}"
+}
+
 # "cmd & spinner [message]"
-spinner() {
+e_spinner() {
 	PID=$!
 	h=0; anim='-\|/';
 	while [ -d /proc/$PID ]; do
