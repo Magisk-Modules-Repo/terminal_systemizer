@@ -300,11 +300,11 @@ list_installed_apps() {
 			if ! dumpsys package $i | grep -qEm1 -e "(codePath=$SYSTEM|targetSdk=0|codePath=/vendor/overlay)" - ; then
 				app=${i##*/}
 				package=$app
-				package[$c]=$package
-				dir_app[$c]=/data/app/$app-*/base.apk
-				$use_aapt && { app=$(aapt d badging ${dir_app[$c]} | grep 'application-label:'); app=${app#*:}; }
-				app1[$c]=$(echo "$app" | tr ' ' '_' | tr -d "'")
-				echo "app${c}^=${app1[$c]}^=${dir_app[$c]}^=${package[$c]}^=" >> $LISTFILE
+				package[c]=$package
+				dir_app[c]=/data/app/$app-*/base.apk
+				$use_aapt && { app=$(aapt d badging ${dir_app[c]} | grep 'application-label:'); app=${app#*:}; }
+				app1[c]=$(echo "$app" | tr ' ' '_' | tr -d "'")
+				echo "app${c}^=${app1[c]}^=${dir_app[c]}^=${package[c]}^=" >> $LISTFILE
 				c=$((c+1))
 			fi
 		done
@@ -320,11 +320,11 @@ list_systemized_apps() {
 	cc=1
 	for i in ${systemized_apps[@]}; do
 		ProgressBar $cc ${#systemized_apps[@]}
-		rev_dir[$cc]=${i%/*}
-		rev_label[$cc]=${i%/*}
-		rev_label[$cc]=${rev_label[$cc]##*/}
-		rev_app[$cc]=${rev_label[$cc]}
-		$use_aapt && { rev_app=$(aapt d badging $i | grep 'application-label:'); rev_app=${rev_app#*:}; rev_app[$cc]=$(echo $rev_app | tr ' ' '_' | tr -d "'"); }
+		rev_dir[cc]=${i%/*}
+		rev_label=${i%/*}
+		rev_label[cc]=${rev_label##*/}
+		rev_app[cc]=${rev_label[cc]}
+		$use_aapt && { rev_app=$(aapt d badging $i | grep 'application-label:'); rev_app=${rev_app#*:}; rev_app[cc]=$(echo $rev_app | tr ' ' '_' | tr -d "'"); }
 		cc=$((cc+1))
 	done
 }
@@ -369,7 +369,7 @@ systemize() {
 			app_perm=(); perm=()
 			for i in $(aapt d permissions $apkdir | grep -v 'package:' | awk '{print $2}'); do
 				_perm=$(echo ${i#*=} | tr -d "'")
-				perm[$pp]=$_perm
+				perm[pp]=$_perm
 				pp=$((pp+1))
 			done
 			app_perm=($(echo "${perm[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
@@ -511,7 +511,7 @@ menu_list_systemized_apps() {
 	echo "$div"
 	echo ""
 	for i in $(seq 0 $((${#app[@]}-1))); do
-		echo " $((i+1)) - ${W}${app[$i]}${N}" | tr '_' ' '
+		echo " $((i+1)) - ${W}${app[i]}${N}" | tr '_' ' '
 	done
 	echo ""
 	echo " ${Bl}To systemize multiple apps, enter multiple number. Example:${N} \"1 $(echo ${#app[$((${#app[@]}/3))]}) $(echo ${#app[$((${#app[@]}/2))]})\""
@@ -530,8 +530,8 @@ menu_list_systemized_apps() {
 		else
 			echo "$div"
 			i=$((i-1))
-			echo "Systemizing ${W}${app[$i]}${N}" | tr '_' ' '
-			get_cfg ${app[$i]}
+			echo "Systemizing ${W}${app[i]}${N}" | tr '_' ' '
+			get_cfg ${app[i]}
 			echo -n " Checking APK directory"
 			if [ -f $DIR_APP ]; then
 				echo " - ${W}OK${N}"
@@ -548,7 +548,7 @@ menu_list_systemized_apps() {
 					elif [ "$loc" == 2 ]; then
 						systemize /system/priv-app
 					elif [ "$loc" == 0 ]; then
-						echo " ${app[$i]} canceled"; true
+						echo " ${app[i]} canceled"; true
 					else
 						abort "Invalid!"
 					fi
@@ -578,7 +578,7 @@ revert_apps() {
 	echo "$div"
 	echo ""
 	for i in $(seq 1 $((${#rev_app[@]}-1))); do
-		echo " $i - ${W}${rev_app[$i]}${N}" | tr '_' ' '
+		echo " $i - ${W}${rev_app[i]}${N}" | tr '_' ' '
 	done
 	echo ""
 	echo " ${Bl}To systemize multiple apps, enter multiple number. Example:${N} \"1 $(echo ${#rev_app[$((${#rev_app[@]}/3))]}) $(echo ${#rev_app[$((${#rev_app[@]}/2))]})\""
@@ -593,9 +593,9 @@ revert_apps() {
 		elif [ "$i" == 0 ]; then
 			exit
 		else
-			echo "Reverting ${rev_app[$i]}..." | tr '_' ' '
-			rm -rf ${rev_dir[$i]}
-			rm -rf $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${rev_label[$i]}.xml 2>$LOG >$LOG
+			echo "Reverting ${rev_app[i]}..." | tr '_' ' '
+			rm -rf ${rev_dir[i]}
+			rm -rf $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${rev_label[i]}.xml 2>$LOG >$LOG
 		fi
 	done
 	echo "Reboot to apply changes"
@@ -653,7 +653,7 @@ case "$1" in
 		echo
 		for i in ${!rev_dir[@]}; do
 			title_div "App $i"
-			echo "Name\t: $(echo ${rev_app[$i]}| tr '_' ' ')\nLabel\t: ${rev_label[$i]}\nDirectory\t: $(echo ${rev_dir[$i]} | sed 's/.*\/system\///g')" | expand -t 10
+			echo "Name\t: $(echo ${rev_app[i]}| tr '_' ' ')\nLabel\t: ${rev_label[i]}\nDirectory\t: $(echo ${rev_dir[i]} | sed 's/.*\/system\///g')" | expand -t 10
 		done
 		exit;;
 	-h|--help) help_me;;
