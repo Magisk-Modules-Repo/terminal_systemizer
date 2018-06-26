@@ -16,6 +16,10 @@
 
 ## Changelog
 
+### v13.4
+* Faster app loading (noticeable) when in ADB
+* Improve xml file generated
+* Misc improvements
 ### v13.3.1
 * Fix systemizing glitches
 * Misc improvements
