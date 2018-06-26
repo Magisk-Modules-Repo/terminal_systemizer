@@ -1,0 +1,3 @@
+[submodule "common/mod-util"]
+	path = common/mod-util
+	url = https://github.com/veez21/mod-util
