@@ -4,7 +4,6 @@
 
 
 # Magisk Module ID **
-# > ENTER MAGISK MODULE ID HERE
 ID="terminal_systemizer"
 
 # Magisk Mod Directory
@@ -24,6 +23,10 @@ oldLOG=/cache/${ID}-old.log
 # > Verbose output goes here
 VERLOG=/cache/${ID}-verbose.log
 oldVERLOG=/cache/${ID}-verbose-old.log
+
+#=========================== Start Logging verbosely
+mv -f $VERLOG $oldVERLOG 2>/dev/null; mv -f $LOG $oldLOG 2>/dev/null
+set -x 2>$VERLOG
 
 #=========================== Load mod-util.sh
 . $MODDIR/mod-util.sh || exit $?
@@ -64,6 +67,15 @@ LISTFILE=/cache/systemize.list
 BOOTMODE=true
 RESCAN=true
 
+# Method
+[ $LOGNAME ] && use_cmd=true || use_cmd=false
+method="ls /data/data"
+detect="codePath=$SYSTEM|targetSdk=0|codePath=/vendor/overlay"
+if $use_cmd; then
+	[ $API -le 23 ] && method="pm list packages -3"
+	[ $API -ge 24 ] && method="cmd package list packages -3"
+	detect="targetSdk=0"
+fi
 # Detect if /system/app is available
 [ -d $SYSTEM/app ] && sysapp=1
 
@@ -78,10 +90,10 @@ total_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $2}')"
 list_installed_apps() {
 	if $RESCAN; then
 		rm $LISTFILE 2>$LOG; app=(); app1=(); app2=();
-		for i in $(ls /data/data); do
+		for i in $($method | sed 's/.*://'); do
 			h=$(((h+1)%4))
 			Spinner "Loading Apps"
-			if ! dumpsys package $i | grep -qEm1 -e "(codePath=$SYSTEM|targetSdk=0|codePath=/vendor/overlay)" - ; then
+			if ! dumpsys package $i | grep -qEm1 -e "($detect)" - ; then
 				app=${i##*/}
 				package=$app
 				package[c]=$package
@@ -114,9 +126,9 @@ list_systemized_apps() {
 }
 
 get_cfg() {
-	APP_NAME=$(grep -w "=${1}^" $LISTFILE | tr '^=' ' ' | awk '{print $2}')
-	DIR_APP=$(grep -w "=${1}^" $LISTFILE | tr '^=' ' ' | awk '{print $3}')
-	PKG=$(grep -w "=${1}^" $LISTFILE | tr '^=' ' ' | awk '{print $4}')
+	APP_NAME=$(grep -wm1 "=${1}^" $LISTFILE | tr '^=' ' ' | awk '{print $2}')
+	DIR_APP=$(grep -wm1 "=${1}^" $LISTFILE | tr '^=' ' ' | awk '{print $3}')
+	PKG=$(grep -wm1 "=${1}^" $LISTFILE | tr '^=' ' ' | awk '{print $4}')
 	[ $? -gt 0 ] && abort "Package doesn't exist!"
 }
 
