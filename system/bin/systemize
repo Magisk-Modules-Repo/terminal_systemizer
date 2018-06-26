@@ -88,20 +88,11 @@ fi
 [ -f /data/adb/magisk/util_functions.sh ] && . /data/adb/magisk/util_functions.sh || exit 1
 
 # Magisk Mod Directory
-MOUNTPATH=/magisk
-if [ ! -d $MOUNTPATH ]; then
-	if [ -d /sbin/.core/img ]; then
-		MOUNTPATH=/sbin/.core/img
-	fi
-fi
+MOUNTPATH=/sbin/.core/img
 MODDIR="$MOUNTPATH/$ID"
 if [ ! -d $MODDIR ]; then
-	if [ -d /sbin/.core/img/$ID ]; then
-		MODDIR=/sbin/.core/img/$ID
-	else
-		echo "Module not detected!"
-		exit 1
-	fi
+	echo "Module not detected!"
+	exit 1
 fi
 
 # Device Info
@@ -264,6 +255,8 @@ exit
 }
 
 use_aapt=false
+[[ "$(which aapt)" ]] && use_aapt=true
+export PATH=$MODDIR:$PATH
 sysapp=0
 privapp=0
 perm_xml1=$SYSTEM/etc/permissions/privapp-permissions-platform.xml
@@ -273,12 +266,6 @@ mkdir -p $MODDIR$SYSTEM2/etc/permissions 2>/dev/null
 LISTFILE=/cache/systemize.list
 BOOTMODE=true
 RESCAN=true
-
-# Use aapt if present
-if [ -x $SYSTEM/bin/aapt ] || [ -x $SYSTEM/xbin/aapt ] || [ -x /sbin/aapt ] || [ -x $MODDIR/aapt ]; then
-	export PATH=$MODDIR:$PATH
-	use_aapt=true
-fi
 
 # Detect if /system/app is available
 [ -d $SYSTEM/app ] && sysapp=1
