@@ -195,7 +195,7 @@ e_spinner() {
 	while [ -d /proc/$PID ]; do
 		h=$(((h+1)%4))
 		sleep 0.02
-		printf "\rLoading [${anim:$h:1}]"
+		printf "\r${@} [${anim:$h:1}]"
 	done
 }
 
