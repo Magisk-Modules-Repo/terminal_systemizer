@@ -70,7 +70,7 @@ RESCAN=true
 # Method
 [ $LOGNAME ] && use_cmd=true || use_cmd=false
 method="ls /data/data"
-detect="codePath=$SYSTEM|targetSdk=0|codePath=/vendor/overlay"
+detect="SYSTEM|targetSdk=0"
 if $use_cmd; then
 	[ $API -le 23 ] && method="pm list packages -3"
 	[ $API -ge 24 ] && method="cmd package list packages -3"
