@@ -69,6 +69,7 @@ RESCAN=true
 
 # Method
 [ $LOGNAME ] && use_cmd=true || use_cmd=false
+[ $(getenforce) == "Permissive" ] && use_cmd=true || use_cmd=false
 method="ls /data/data"
 detect="SYSTEM|targetSdk=0"
 if $use_cmd; then
