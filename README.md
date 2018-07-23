@@ -16,6 +16,9 @@
 
 ## Changelog
 
+### v13.5
+* Fix errors when detecting $MOUNTPOINT free space
+* Misc improvements
 ### v13.4.1
 * Faster app loading (noticeable) when in ADB
 * Improve xml file generated
