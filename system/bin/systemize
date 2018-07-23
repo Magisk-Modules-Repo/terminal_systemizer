@@ -59,6 +59,7 @@ export PATH=$MODDIR:$PATH
 [[ "$(which aapt)" ]] && use_aapt=true
 sysapp=0
 privapp=0
+IFUPDATED=""
 perm_xml1=$SYSTEM/etc/permissions/privapp-permissions-platform.xml
 perm_xml=$MODDIR$SYSTEM2/etc/permissions/privapp-permissions-platform.xml
 [ -f $perm_xml1 ] && patch_xml=true || patch_xml=false
@@ -113,6 +114,7 @@ list_installed_apps() {
 
 # List systemized apps
 list_systemized_apps() {
+	systemized_apps=(); rev_dir=(); rev_label=(); rev_app=()
 	systemized_apps=($(find $MODDIR -name "*.apk" -type f))
 	cc=1
 	for i in ${systemized_apps[@]}; do
@@ -124,6 +126,21 @@ list_systemized_apps() {
 		$use_aapt && { rev_app=$(aapt d badging $i | grep 'application-label:'); rev_app=${rev_app#*:}; rev_app[cc]=$(echo $rev_app | tr ' ' '_' | tr -d "'"); }
 		cc=$((cc+1))
 	done
+}
+
+# Check updated apps to resystemize
+chk_updates() {
+	list_systemized_apps 2>>$LOG
+	sleep 0.3
+	cc=1
+	for i in ${rev_label[@]}; do
+		ProgressBar $cc ${#rev_label[@]}
+		if $(dumpsys package $i | grep UPDATED_SYSTEM_APP >/dev/null); then
+			updated_app[cc]=$i
+			#updated_app_name=$(aapt d badging $MODDIR
+		fi
+	done
+	#stub
 }
 
 get_cfg() {
@@ -409,6 +426,7 @@ menu() {
 	echo " 3 - Systemize given APK"
 	if [[ $(find $MODDIR -name "*.apk" 2>$LOG) ]]; then
 		echo " 4 - Revert Systemized Apps"
+		#echo " 5 - Update apks"
 	fi
 	echo " d - ${C}Donate${N}"
 	echo " 0 - Exit"
@@ -428,6 +446,10 @@ menu() {
 	elif [ "$choice" == 4 ]; then
 		clear
 		revert_apps
+		exit $?
+	elif [ "$choice" == 5 ]; then
+		clear
+		#chk_updates
 		exit $?
 
 	elif [ "$choice" == "d" ] || [ "$choice" == "D" ]; then
