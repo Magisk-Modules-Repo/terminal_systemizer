@@ -278,7 +278,7 @@ enter_apk_name() {
 # Check apk size
 chk_apk_size() {
 	dir_app=$(echo $1)
-	free_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $4}')"
+	free_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $3}')"
 	total_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $2}')"
 	apk_sizeM="$(du -m $dir_app | awk '{print $1}')"
 	if [ "$apk_sizeM" -gt "$((free_space-10))" ]; then
