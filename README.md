@@ -16,6 +16,8 @@
 
 ## Changelog
 
+### v13.5.1
+* Fix app detection
 ### v13.5
 * Fix errors when detecting $MOUNTPOINT free space
 * Misc improvements
