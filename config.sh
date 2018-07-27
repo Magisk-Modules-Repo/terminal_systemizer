@@ -99,6 +99,7 @@ set_permissions() {
   set_perm $MODPATH/system/$bin/systemize 0 0 0777
   set_perm $MODPATH/aapt 0 0 0777
   set_perm $MODPATH/mod-util.sh 0 0 0777
+  echo "selinux=${se_value}" >> $MODPATH/module.prop
 }
 
 ##########################################################################################
@@ -144,6 +145,12 @@ detect_installed() {
 
   additional_size=$((additional_size / 1024 + 1))
   reqSizeM=$((reqSizeM+additional_size))
+
+  # Perform additional stuff
+  se_value=$(grep_prop selinux $MODPATH/module.prop)
+  if [ "$se_value" != "true" ]; then
+    se_value=false
+  fi
 }
 
 reinstall() {
