@@ -100,7 +100,7 @@ N='\e[0m'			# How to use (example): echo "${G}example${N}"
 loadBar=' '			# Load UI
 # Remove color codes if -nc or in ADB Shell
 [ -n "$1" -a "$1" == "-nc" ] && shift && NC=true
-[ "$NC" -o -n "$LOGNAME" ] && {
+[ "$NC" -o -n "$ADB_TRACE" ] && {
 	G=''; R=''; Y=''; B=''; V=''; Bl=''; C=''; W=''; N=''; BGBL=''; loadBar='=';
 }
 
