@@ -121,9 +121,7 @@ list_installed_apps() {
 		app2=($(echo "${app1[@]}" | sed "s/.*'//g"))
 		app=($(printf '%s\n' "${app2[@]}" | sort -f))
 		RESCAN=false
-		if $se_set; then
-			setenforce 1
-		fi
+		$se_set && setenforce 1
 	fi
 }
 
