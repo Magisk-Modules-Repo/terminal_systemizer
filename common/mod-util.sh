@@ -117,7 +117,15 @@ title_div() {
 
 # set_file_prop <property> <value> <prop.file>
 set_file_prop() {
-	sed -i "s/${1}=.*/${1}=${2}/g" $3
+	if [ -f "$3" ]; then
+		if grep "$1=" $3; then
+			sed -i "s/${1}=.*/${1}=${2}/g" $3
+		else
+			echo "$1=$2" >> $3
+		fi
+	else
+		echo "$3 doesn't exist!"
+	fi
 }
 
 # https://github.com/fearside/ProgressBar
@@ -185,7 +193,7 @@ upload_logs() {
 		echo "$MODEL ($DEVICE) API $API\n$ROM\n$ID\n
 		O_Verbose: $oldverUp
 		Verbose:   $verUp
-	
+
 		O_Log: $oldlogUp
 		Log:   $logUp" | nc termbin.com 9999
 	} || echo "Busybox not found!"
