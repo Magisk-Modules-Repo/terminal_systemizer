@@ -1,7 +1,7 @@
 id=terminal_systemizer
 name=App Systemizer (Terminal Emulator)
-version=v13.5.1
-versionCode=52
+version=v14
+versionCode=53
 author=veez21
 description=Turn apps to System Apps Systemlessly! Supports all device running Magisk.
 minMagisk=1500

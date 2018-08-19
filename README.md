@@ -16,6 +16,11 @@
 
 ## Changelog
 
+### v14
+* Add Set SELinux option to make app detection faster
+* Make "Enter Label" option faster and more efficient
+* Name apk to it's parent folder
+* Misc improvements
 ### v13.5.1
 * Fix app detection
 ### v13.5
