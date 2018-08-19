@@ -100,6 +100,9 @@ set_permissions() {
   set_perm $MODPATH/aapt 0 0 0777
   set_perm $MODPATH/mod-util.sh 0 0 0777
   echo "selinux=${se_value}" >> $MODPATH/module.prop
+  if $BOOTMODE; then
+    echo "selinux=${se_value}" >> /sbin/.core/img/$MODID/module.prop
+  fi
 }
 
 ##########################################################################################
@@ -148,6 +151,9 @@ detect_installed() {
 
   # Perform additional stuff
   se_value=$(grep_prop selinux $MODPATH/module.prop)
+  if $BOOTMODE; then
+    se_value=$(grep_prop selinux /sbin/.core/img/$MODID/module.prop)
+  fi
   if [ "$se_value" != "true" ]; then
     se_value=false
   fi
