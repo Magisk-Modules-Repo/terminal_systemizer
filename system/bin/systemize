@@ -67,13 +67,14 @@ mkdir -p $MODDIR$SYSTEM2/etc/permissions 2>/dev/null
 LISTFILE=/cache/systemize.list
 BOOTMODE=true
 RESCAN=true
+use_cmd=false
 se_set=false
 
 # Method
 [ "$(grep_prop selinux $MODDIR/module.prop)" == "true" ] && { use_cmd=true; se_set=true; } || {
-	use_cmd=false
-	[ $(getenforce) == "Permissive" ] && use_cmd=true || use_cmd=false
-	[ $LOGNAME ] && use_cmd=true || use_cmd=false
+	[ $(getenforce) == "Permissive" ] && use_cmd=true || {
+		[ $LOGNAME ] && use_cmd=true || use_cmd=false
+	}
 }
 method="ls /data/data"
 detect="codePath=$SYSTEM|targetSdk=0|codePath=/vendor/overlay"
