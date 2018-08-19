@@ -265,27 +265,19 @@ enter_apk_dir() {
 enter_apk_name() {
 	echo "Enter the App Label of the installed app"
 	echo "Example: com.android.launcher"
+	echo " x - ${Bl}Back to Menu${N}"
 	echo -n " > "
 	read apklabel
 	if [ ! "$apklabel" ]; then
 		abort "error"
 	fi
-	echo "Checking if $apklabel is installed"
-	list_installed_apps 2>$LOG
-	get_cfg $apklabel
-	if [ "$PKG" ]; then
-		echo " - OK"
-		apkdir=$DIR_APP
-		if [ -d $SYSTEM/priv-app ]; then
-			installdir="priv-app"
-		else
-			installdir="app"
-		fi
-		systemize /system/$installdir $apkdir
-		[ $? -ne 0 ] && echo "Failed!" && exit 1
+	if [ -d $SYSTEM/priv-app ]; then
+		installdir="priv-app"
 	else
-		abort "Failed!"
+		installdir="app"
 	fi
+	systemize /system/$installdir /data/app/${apklabel}-*/base.apk
+	[ $? -ne 0 ] && abort "Failed!"
 }
 
 # Check apk size
@@ -437,16 +429,21 @@ set_selinux() {
 	title_div "Set SELinux"
 	echo "$div"
 	echo " This setting turns on the ability to dynamically disable"
-	echo " SELinux (only when needed to enable unrestricted actions)"
-	echo " for the script to execute faster"
+	echo " SELinux if enabled (only when needed to enable unrestricted"
+	echo " actions) for the script to execute noticeably faster."
+	echo " It is fairly safe to do since it will immediately return"
+	echo " SELinux status after a certain action."
 	echo "$div"
 	echo ""
+	stat_color=$G
 	se_set="$(grep_prop selinux $MODDIR/module.prop)"
-	[ "$se_set" != true ] && se_set=false
-	echo " Status: $se_set"
+	[ "$se_set" != true ] && se_set=false && stat_color=$R
+	echo " SELinux Status: $(getenforce)"
+	echo " Enabled: ${stat_color}$se_set${N}"
+	[ $(getenforce) == "Permissive" ] && echo " ${Y}SELinux is disabled! No need to enable this if it's permissive lmao${N}"
 	echo ""
-	echo " c - Change status"
-	echo " x - Back to menu"
+	echo " c - ${W}Change status${N}"
+	echo " x - ${Bl}Back to Menu${N}"
 	echo " 0 - Exit"
 	echo -n "[CHOICE]: "
 	read sechoice
@@ -470,6 +467,12 @@ set_selinux() {
 
 menu() {
 	mod_head
+	stat_color=$G
+	se_set="$(grep_prop selinux $MODDIR/module.prop)"
+	[ "$se_set" != true ] && se_set=false && stat_color=$R
+	echo "Set SELinux Enabled: ${stat_color}$se_set${N}"
+	echo "SELinux Status: $(getenforce)"
+	echo "$div"
 	echo ""
 	echo " 1 - Systemize Installed Apps (Listed)"
 	echo " 2 - Systemize Installed Apps (Enter label) "
@@ -478,7 +481,7 @@ menu() {
 		echo " 4 - Revert Systemized Apps"
 		#echo " 5 - Update apks"
 	fi
-	echo " se - Set SELinux"
+	echo " s - Set SELinux"
 	echo " d - ${C}Donate${N}"
 	echo " 0 - Exit"
 	echo ""
@@ -507,7 +510,7 @@ menu() {
 		am start https://paypal.me/veez21 >$LOG
 	elif [ "$choice" == "logs" ]; then
 		upload_logs
-	elif [ "$choice" == "se" ]; then
+	elif [ "$choice" == "s" ]; then
 		set_selinux
 	elif [ "$choice" == 0 ]; then
 		exit
