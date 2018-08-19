@@ -189,7 +189,7 @@ systemize() {
 		abort " App exists!"
 	else
 		mkdir -p ${MODDIR}${1}/${name}
-		cp -f $apkdir ${MODDIR}${1}/${name}
+		cp -f $apkdir ${MODDIR}${1}/${name}/${name}.apk
 		set_perm_recursive  ${MODDIR}${1}/${name} 0 0 0755 0755
 		$patch_xml && [ ${1##*/} == "priv-app" ] && {
 			echo " Granting Permissions"
