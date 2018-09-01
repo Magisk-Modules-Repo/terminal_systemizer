@@ -16,6 +16,8 @@
 
 ## Changelog
 
+### v14.1
+* Update module template
 ### v14
 * Add Set SELinux option to make app detection faster
 * Make "Enter Label" option faster and more efficient
