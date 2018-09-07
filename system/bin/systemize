@@ -293,8 +293,9 @@ chk_apk_size() {
 	free_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $3}')"
 	total_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $2}')"
 	apk_sizeM="$(du -m $dir_app | awk '{print $1}')"
+	[ -d ${dir_app%/*}/lib ] && apk_sizeM="$((apk_sizeM+$(du -ms ${dir_app%/*}/lib | awk '{print $1}')))"
 	if [ "$apk_sizeM" -gt "$((free_space-10))" ]; then
-		echo " Checking APK size - ${W}${apk_sizeM}M${N}"
+		echo " Checking App size - ${W}${apk_sizeM}M${N}"
 		echo "- Insufficient $MOUNTPATH space!"
 		echo "- APK size: ${apk_sizeM}M | $MOUNTPATH Free: ${free_space}M"
 		echo "- Using magisk_merge.img to merge images..."
