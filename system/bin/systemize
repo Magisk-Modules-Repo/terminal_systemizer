@@ -6,6 +6,9 @@
 # Magisk Module ID **
 ID="terminal_systemizer"
 
+# Detect root
+[[ $(id -u) -ne 0 ]] && { echo "$ID needs to be in as root!"; echo "type 'su' then '$_name'"; exit 1; }
+
 # Magisk Mod Directory
 MOUNTPATH=/sbin/.core/img
 MODDIR="$MOUNTPATH/$ID"
