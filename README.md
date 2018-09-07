@@ -16,6 +16,9 @@
 
 ## Changelog
 
+### v14.2
+* Re-add root detection
+* Include app libs when systemizing
 ### v14.1
 * Update module template
 ### v14
@@ -32,33 +35,3 @@
 * Faster app loading (noticeable) when in ADB
 * Improve xml file generated
 * Misc improvements
-### v13.3.1
-* Fix systemizing glitches
-* Misc improvements
-### v13.3
-* Fixed generating permissions
-* Misc improvements
-### v13.2
-* Systemized app listing looks better and much more readable :3
-* Misc improvements
-### v13.1
-* Add -l option to list systemized apps
-* Apps doesn't get refreshed if you go back to menu
-* Add "Refresh list" option in app list menu
-* Misc improvements
-### v13
-* Add -a option to directly systemize a given package name
-* Add -d option to directly systemize a given apk
-* Automatically disable ANSI codes (the colors) when in ADB shell
-* Add help message
-* Misc
-### v12.2
-* Fixed quirks when listing app names
-### v12.1
-* Fixed stuff related to busybox alias
-### v12
-* Add Back to menu option
-* Logs can now be uploaded by entering `logs`
-* Other listed menus now have multiple option.
-* Misc improvements XD
-
