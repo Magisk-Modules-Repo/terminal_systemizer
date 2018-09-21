@@ -225,8 +225,11 @@ systemize() {
 }
 
 enter_apk_dir() {
+	echo "Example: ${W}/sdcard/launcher.apk${N}"
+	echo " x - ${Bl}Back to Menu${N}"
 	echo -n "Enter APK Path: "
 	read apkdir
+	[ "$apkdir" == "x" ] && menu
 	echo "Checking if file exists..."
 	if [ -f "$apkdir" ]; then
 		echo " - OK"
@@ -277,6 +280,8 @@ enter_apk_name() {
 	read apklabel
 	if [ ! "$apklabel" ]; then
 		abort "error"
+	elif [ "$apklabel" == "x" ]; then
+		menu
 	fi
 	if [ -d $SYSTEM/priv-app ]; then
 		installdir="priv-app"
