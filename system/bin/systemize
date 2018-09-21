@@ -106,7 +106,7 @@ list_installed_apps() {
 				se_set=false
 			fi
 		fi
-		rm $LISTFILE 2>$LOG; app=(); app1=(); app2=();
+		rm $LISTFILE 2>>$LOG; app=(); app1=(); app2=();
 		for i in $($method | sed 's/.*://'); do
 			h=$(((h+1)%4))
 			Spinner "Loading Apps"
@@ -225,6 +225,7 @@ systemize() {
 }
 
 enter_apk_dir() {
+	clear
 	echo "Example: ${W}/sdcard/launcher.apk${N}"
 	echo " x - ${Bl}Back to Menu${N}"
 	echo -n "Enter APK Path: "
@@ -273,6 +274,7 @@ enter_apk_dir() {
 }
 
 enter_apk_name() {
+	clear
 	echo "Enter the App Label of the installed app"
 	echo "Example: com.android.launcher"
 	echo " x - ${Bl}Back to Menu${N}"
@@ -325,14 +327,14 @@ merge_img() {
 	MODDIR=$tmpmodpath
 }
 
-mount -o remount,rw $MOUNTPATH 2>$LOG
-mount -o rw,remount $MOUNTPATH 2>$LOG
-mount -o remount,rw /cache 2>$LOG
+mount -o remount,rw $MOUNTPATH 2>>$LOG
+mount -o rw,remount $MOUNTPATH 2>>$LOG
+mount -o remount,rw /cache 2>>$LOG
 mount -o rw,remount /cache 2>$LOG
-busybox mount -o remount,rw $MOUNTPATH 2>$LOG
-busybox mount -o rw,remount $MOUNTPATH 2>$LOG
-busybox mount -o remount,rw /cache 2>$LOG
-busybox mount -o rw,remount /cache 2>$LOG
+busybox mount -o remount,rw $MOUNTPATH 2>>$LOG
+busybox mount -o rw,remount $MOUNTPATH 2>>$LOG
+busybox mount -o remount,rw /cache 2>>$LOG
+busybox mount -o rw,remount /cache 2>>$LOG
 
 menu_list_systemized_apps() {
 	clear
@@ -403,7 +405,7 @@ menu_list_systemized_apps() {
 }
 
 revert_apps() {
-	list_systemized_apps 2>$LOG
+	list_systemized_apps 2>>$LOG
 	clear
 	echo "$div"
 	title_div "Revert"
@@ -413,7 +415,7 @@ revert_apps() {
 		echo " $i - ${W}${rev_app[i]}${N}" | tr '_' ' '
 	done
 	echo ""
-	echo " ${Bl}To systemize multiple apps, enter multiple number. Example:${N} \"1 $(echo ${#rev_app[$((${#rev_app[@]}/3))]}) $(echo ${#rev_app[$((${#rev_app[@]}/2))]})\""
+	echo " ${Bl}To systemize multiple apps, enter multiple number. Example:${N} \"1 ${#rev_app[$((${#rev_app[@]}/3))]} ${#rev_app[$((${#rev_app[@]}/2))]}\""
 	echo " x - ${Bl}Back to Menu${N}"
 	echo " 0 -  Exit"
 	echo -n "[CHOICE]: "
@@ -427,7 +429,7 @@ revert_apps() {
 		else
 			echo "Reverting ${rev_app[i]}..." | tr '_' ' '
 			rm -rf ${rev_dir[i]}
-			rm -rf $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${rev_label[i]}.xml 2>$LOG >$LOG
+			rm -rf $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${rev_label[i]}.xml 2>>$LOG >>$LOG
 		fi
 	done
 	echo "Reboot to apply changes"
@@ -490,7 +492,7 @@ menu() {
 	echo " 1 - Systemize Installed Apps (Listed)"
 	echo " 2 - Systemize Installed Apps (Enter label) "
 	echo " 3 - Systemize given APK"
-	if [[ $(find $MODDIR -name "*.apk" 2>$LOG) ]]; then
+	if [[ $(find $MODDIR -name "*.apk" 2>>$LOG) ]]; then
 		echo " 4 - Revert Systemized Apps"
 		#echo " 5 - Update apks"
 	fi
@@ -500,36 +502,21 @@ menu() {
 	echo ""
 	echo -n "[CHOICE]: "
 	read choice
-	if [ "$choice" == 1 ]; then
-		menu_list_systemized_apps
-	elif [ "$choice" == 2 ]; then
-		clear
-		enter_apk_name
-		exit $?
-	elif [ "$choice" == 3 ]; then
-		clear
-		enter_apk_dir
-		exit $?
-	elif [ "$choice" == 4 ]; then
-		clear
-		revert_apps
-		exit $?
-	elif [ "$choice" == 5 ]; then
-		clear
+	case "$choice" in
+		1) menu_list_systemized_apps;;
+		2) enter_apk_name; exit $?;;
+		3) enter_apk_dir; exit $?;;
+		4) revert_apps; exit $?;;
+		5) clear
 		#chk_updates
-		exit $?
+		exit $?;;
 
-	elif [ "$choice" == "d" ] || [ "$choice" == "D" ]; then
-		am start https://paypal.me/veez21 >$LOG
-	elif [ "$choice" == "logs" ]; then
-		upload_logs
-	elif [ "$choice" == "s" ]; then
-		set_selinux
-	elif [ "$choice" == 0 ]; then
-		exit
-	else  echo "Invalid!"
-		exit 1
-	fi
+		d|D) am start https://paypal.me/veez21 >>$LOG;;
+		logs) upload_logs;;
+		s|S) set_selinux;;
+		0) exit;;
+		*) echo "Invalid!"; exit 1;;
+	esac
 }
 
 case "$1" in
