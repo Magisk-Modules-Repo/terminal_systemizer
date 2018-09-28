@@ -145,21 +145,6 @@ list_systemized_apps() {
 	done
 }
 
-# Check updated apps to resystemize
-chk_updates() {
-	list_systemized_apps 2>>$LOG
-	sleep 0.3
-	cc=1
-	for i in ${rev_label[@]}; do
-		ProgressBar $cc ${#rev_label[@]}
-		if $(dumpsys package $i | grep UPDATED_SYSTEM_APP >/dev/null); then
-			updated_app[cc]=$i
-			#updated_app_name=$(aapt d badging $MODDIR
-		fi
-	done
-	#stub
-}
-
 get_cfg() {
 	APP_NAME=$(grep -wm1 "=${1}^" $LISTFILE | tr '^=' ' ' | awk '{print $2}')
 	DIR_APP=$(grep -wm1 "=${1}^" $LISTFILE | tr '^=' ' ' | awk '{print $3}')
@@ -495,7 +480,6 @@ menu() {
 	echo " 3 - Systemize given APK"
 	if [[ $(find $MODDIR -name "*.apk" 2>>$LOG) ]]; then
 		echo " 4 - Revert Systemized Apps"
-		#echo " 5 - Update apks"
 	fi
 	echo " s - Set SELinux"
 	echo " d - ${C}Donate${N}"
@@ -508,9 +492,6 @@ menu() {
 		2) enter_apk_name; exit $?;;
 		3) enter_apk_dir; exit $?;;
 		4) revert_apps; exit $?;;
-		5) clear
-		#chk_updates
-		exit $?;;
 
 		d|D) am start https://paypal.me/veez21 >>$LOG;;
 		logs) upload_logs;;
