@@ -235,12 +235,14 @@ enter_apk_dir() {
 			echo " - $name"
 			if [ $privapp == 1 ] && [ $sysapp == 1 ]; then 
 				echo "Where to install?"
-				echo -n "< 1 - $SYSTEM/app | 2 - $SYSTEM/priv-app > : "
+				echo -n "< 1 - $SYSTEM/app | 2 - $SYSTEM/priv-app | 0 - cancel > : "
 				read loc
 				if [ "$loc" == 1 ]; then
 					systemize /system/app
 				elif [ "$loc" == 2 ]; then
 					systemize /system/priv-app
+				elif [ "$loc" == 0 ]; then
+					echo " $name canceled"; exit
 				else
 					abort "Invalid!"
 				fi
