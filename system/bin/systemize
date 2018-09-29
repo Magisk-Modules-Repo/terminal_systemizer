@@ -430,7 +430,7 @@ revert_apps() {
 		else
 			echo "Reverting ${rev_app[i]}..." | tr '_' ' '
 			rm -rf ${rev_dir[i]}
-			rm -rf $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${rev_label[i]}.xml 2>>$LOG >>$LOG
+			rm -rf $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${rev_label[i]}.xml >>$LOG 2>$1
 		fi
 	done
 	echo "Reboot to apply changes"
@@ -508,7 +508,7 @@ menu() {
 		3) enter_apk_dir; exit $?;;
 		4) revert_apps; exit $?;;
 
-		d|D) am start https://paypal.me/veez21 >>$LOG;;
+		d|D) am start https://paypal.me/veez21 >>$LOG 2>&1;;
 		logs) upload_logs;;
 		s|S) set_selinux;;
 		0) exit;;
