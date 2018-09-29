@@ -16,6 +16,8 @@
 
 ## Changelog
 
+### v14.2.1
+* Misc improvements
 ### v14.2
 * Re-add root detection
 * Include app libs when systemizing
