@@ -91,10 +91,10 @@ set_permissions() {
   bin=bin
   if (grep -q samsung /system/build.prop); then
     bin=xbin
-	mkdir $MODPATH/system/$bin
-	mv $MODPATH/system/bin/systemize $MODPATH/system/$bin
-	rm -rf $MODPATH/system/bin/*
-	rmdir $MODPATH/system/bin
+    mkdir $MODPATH/system/$bin
+    mv $MODPATH/system/bin/systemize $MODPATH/system/$bin
+    rm -rf $MODPATH/system/bin/*
+    rmdir $MODPATH/system/bin
   fi
   set_perm $MODPATH/system/$bin/systemize 0 0 0777
   set_perm $MODPATH/aapt 0 0 0777
@@ -127,21 +127,21 @@ detect_installed() {
 
   if [ -d $COPYPATH/system/app ]; then
     cp -af $COPYPATH/system/app $TMPDIR/$MODID
-	  additional_size=$((additional_size+$(du -ks $COPYPATH/system/app | awk '{print $1}')))
+    additional_size=$((additional_size+$(du -ks $COPYPATH/system/app | awk '{print $1}')))
   else
     no_app=1
   fi
 
   if [ -d $COPYPATH/system/priv-app ]; then
     cp -af $COPYPATH/system/priv-app $TMPDIR/$MODID
-	  additional_size=$((additional_size+$(du -ks $COPYPATH/system/priv-app | awk '{print $1}')))
+    additional_size=$((additional_size+$(du -ks $COPYPATH/system/priv-app | awk '{print $1}')))
   else
     no_privapp=1
   fi
 
   if [ -d $COPYPATH/system/etc/permissions ]; then
     cp -af $COPYPATH/system/etc/permissions $TMPDIR/$MODID
-	  additional_size=$((additional_size+$(du -ks $COPYPATH/system/etc/permissions | awk '{print $1}')))
+    additional_size=$((additional_size+$(du -ks $COPYPATH/system/etc/permissions | awk '{print $1}')))
   else
     no_xml=1
   fi
@@ -167,7 +167,7 @@ reinstall() {
     cp -af $TMPDIR/$MODID/priv-app $MODPATH/system
   fi
   if [ $no_xml == 0 ]; then
-	  mkdir -p $MODPATH/system/etc
-	  cp -af $TMPDIR/$MODID/permissions $MODPATH/system/etc
+    mkdir -p $MODPATH/system/etc
+    cp -af $TMPDIR/$MODID/permissions $MODPATH/system/etc
   fi
 }

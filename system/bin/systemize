@@ -14,8 +14,8 @@ _name=$(basename $0)
 MOUNTPATH=/sbin/.core/img
 MODDIR="$MOUNTPATH/$ID"
 if [ ! -d $MODDIR ]; then
-	echo "Module not detected!"
-	exit 1
+  echo "Module not detected!"
+  exit 1
 fi
 
 # Set Log Files
@@ -41,10 +41,10 @@ set -x 2>$VERLOG
 # > Rather than editing the default vars above.
 
 help_me() {
-	cat << EOF
+  cat << EOF
 $MODTITLE $VER($REL)
 by $AUTHOR
-	
+
 Usage: $_name
    or: $_name [options]...
    
@@ -76,16 +76,16 @@ se_set=false
 
 # Method
 [ "$(grep_prop selinux $MODDIR/module.prop)" == "true" ] && { use_cmd=true; se_set=true; } || {
-	[ $(getenforce) == "Permissive" ] && use_cmd=true || {
-		[ $LOGNAME ] && use_cmd=true || use_cmd=false
-	}
+  [ $(getenforce) == "Permissive" ] && use_cmd=true || {
+    [ $LOGNAME ] && use_cmd=true || use_cmd=false
+  }
 }
 method="ls /data/data"
 detect="codePath=$SYSTEM|targetSdk=0|codePath=/vendor/overlay"
 if $use_cmd; then
-	[ $API -le 23 ] && method="pm list packages -3"
-	[ $API -ge 24 ] && method="cmd package list packages -3"
-	detect="targetSdk=0"
+  [ $API -le 23 ] && method="pm list packages -3"
+  [ $API -ge 24 ] && method="cmd package list packages -3"
+  detect="targetSdk=0"
 fi
 # Detect if /system/app is available
 [ -d $SYSTEM/app ] && sysapp=1
@@ -99,233 +99,233 @@ total_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $2}')"
 
 # List installed apps
 list_installed_apps() {
-	if $RESCAN; then
-		if $se_set; then
-			if [ "$(getenforce)" == "Enforcing" ]; then
-				setenforce 0
-			else
-				se_set=false
-			fi
-		fi
-		rm $LISTFILE 2>>$LOG; app=(); app1=(); app2=();
-		for i in $($method | sed 's/.*://'); do
-			h=$(((h+1)%4))
-			Spinner "Loading Apps"
-			if ! dumpsys package $i | grep -qEm1 -e "($detect)" - ; then
-				app=${i##*/}
-				package=$app
-				package[c]=$package
-				dir_app[c]=/data/app/$app-*/base.apk
-				$use_aapt && { app=$(aapt d badging ${dir_app[c]} | grep 'application-label:'); app=${app#*:}; }
-				app1[c]=$(echo "$app" | tr ' ' '_' | tr -d "'")
-				echo "app${c}^=${app1[c]}^=${dir_app[c]}^=${package[c]}^=" >> $LISTFILE
-				c=$((c+1))
-			fi
-		done
-		app2=($(echo "${app1[@]}" | sed "s/.*'//g"))
-		app=($(printf '%s\n' "${app2[@]}" | sort -f))
-		RESCAN=false
-		$se_set && setenforce 1
-	fi
+  if $RESCAN; then
+    if $se_set; then
+      if [ "$(getenforce)" == "Enforcing" ]; then
+        setenforce 0
+      else
+        se_set=false
+      fi
+    fi
+    rm $LISTFILE 2>>$LOG; app=(); app1=(); app2=();
+    for i in $($method | sed 's/.*://'); do
+      h=$(((h+1)%4))
+      Spinner "Loading Apps"
+      if ! dumpsys package $i | grep -qEm1 -e "($detect)" - ; then
+        app=${i##*/}
+        package=$app
+        package[c]=$package
+        dir_app[c]=/data/app/$app-*/base.apk
+        $use_aapt && { app=$(aapt d badging ${dir_app[c]} | grep 'application-label:'); app=${app#*:}; }
+        app1[c]=$(echo "$app" | tr ' ' '_' | tr -d "'")
+        echo "app${c}^=${app1[c]}^=${dir_app[c]}^=${package[c]}^=" >> $LISTFILE
+        c=$((c+1))
+      fi
+    done
+    app2=($(echo "${app1[@]}" | sed "s/.*'//g"))
+    app=($(printf '%s\n' "${app2[@]}" | sort -f))
+    RESCAN=false
+    $se_set && setenforce 1
+  fi
 }
 
 # List systemized apps
 list_systemized_apps() {
-	systemized_apps=(); rev_dir=(); rev_label=(); rev_app=()
-	systemized_apps=($(find $MODDIR -name "*.apk" -type f))
-	cc=1
-	for i in ${systemized_apps[@]}; do
-		ProgressBar $cc ${#systemized_apps[@]}
-		rev_dir[cc]=${i%/*}
-		rev_label=${i%/*}
-		rev_label[cc]=${rev_label##*/}
-		rev_app[cc]=${rev_label[cc]}
-		$use_aapt && { rev_app=$(aapt d badging $i | grep 'application-label:'); rev_app=${rev_app#*:}; rev_app[cc]=$(echo $rev_app | tr ' ' '_' | tr -d "'"); }
-		cc=$((cc+1))
-	done
+  systemized_apps=(); rev_dir=(); rev_label=(); rev_app=()
+  systemized_apps=($(find $MODDIR -name "*.apk" -type f))
+  cc=1
+  for i in ${systemized_apps[@]}; do
+    ProgressBar $cc ${#systemized_apps[@]}
+    rev_dir[cc]=${i%/*}
+    rev_label=${i%/*}
+    rev_label[cc]=${rev_label##*/}
+    rev_app[cc]=${rev_label[cc]}
+    $use_aapt && { rev_app=$(aapt d badging $i | grep 'application-label:'); rev_app=${rev_app#*:}; rev_app[cc]=$(echo $rev_app | tr ' ' '_' | tr -d "'"); }
+    cc=$((cc+1))
+  done
 }
 
 get_cfg() {
-	APP_NAME=$(grep -wm1 "=${1}^" $LISTFILE | tr '^=' ' ' | awk '{print $2}')
-	DIR_APP=$(grep -wm1 "=${1}^" $LISTFILE | tr '^=' ' ' | awk '{print $3}')
-	PKG=$(grep -wm1 "=${1}^" $LISTFILE | tr '^=' ' ' | awk '{print $4}')
-	[ $? -gt 0 ] && abort "Package doesn't exist!"
+  APP_NAME=$(grep -wm1 "=${1}^" $LISTFILE | tr '^=' ' ' | awk '{print $2}')
+  DIR_APP=$(grep -wm1 "=${1}^" $LISTFILE | tr '^=' ' ' | awk '{print $3}')
+  PKG=$(grep -wm1 "=${1}^" $LISTFILE | tr '^=' ' ' | awk '{print $4}')
+  [ $? -gt 0 ] && abort "Package doesn't exist!"
 }
 
 # Systemize function
 # Usage: systemize <install directory> <apk directory>
 systemize() {
-	if [ "$2" ]; then
-		apkdir="$(echo $2)"
-		[ ! -f $apkdir ] && abort " $apkdir doesn't exist!"
-		apk=${apkdir##*/}
-		[ "$3" ] && PKG="$3"
-		if [ "$PKG" ]; then
-			name=$PKG
-		else
-			name=${apkdir%/*}; name=${name##*/}
-			name=$(echo $name | tr -d ' ' | tr -d "'" | tr -d '*' | tr -d '-')
-			$use_aapt && {
-				name=$(aapt d badging $apkdir | head -n1 | awk '{print $2}')
-				name=$(echo ${name#*=} | tr -d ' ' | tr -d "'")
-			}
-		fi
-	fi
-	chk_apk_size $apkdir
-	echo " Transfering ${apk}(${name}) to '$1'..."
-	if [ -d $SYSTEM/app/${name} ] || [ -d $SYSTEM/priv-app/${name} ] || [ -d $MODDIR$SYSTEM2/app/${name} ] || [ -d $MODDIR$SYSTEM2/priv-app/${name} ]; then
-		abort " App exists!"
-	else
-		mkdir -p ${MODDIR}${1}/${name}
-		cp -f $apkdir ${MODDIR}${1}/${name}/${name}.apk
-		if [ -d ${apkdir%/*}/lib ]; then
-			echo " Transfering libs"
-			cp -rf ${apkdir%/*}/lib ${MODDIR}${1}/${name}
-		fi
-		set_perm_recursive ${MODDIR}${1}/${name} 0 0 0755 0644
-		$patch_xml && [ ${1##*/} == "priv-app" ] && {
-			echo " Granting Permissions"
-			pp=0
-			app_perm=(); perm=()
-			for i in $(aapt d permissions $apkdir | grep -v 'package:' | awk '{print $2}'); do
-				_perm=$(echo ${i#*=} | tr -d "'")
-				perm[pp]=$_perm
-				pp=$((pp+1))
-			done
-			app_perm=($(echo "${perm[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
-			echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+  if [ "$2" ]; then
+    apkdir="$(echo $2)"
+    [ ! -f $apkdir ] && abort " $apkdir doesn't exist!"
+    apk=${apkdir##*/}
+    [ "$3" ] && PKG="$3"
+    if [ "$PKG" ]; then
+      name=$PKG
+    else
+      name=${apkdir%/*}; name=${name##*/}
+      name=$(echo $name | tr -d ' ' | tr -d "'" | tr -d '*' | tr -d '-')
+      $use_aapt && {
+        name=$(aapt d badging $apkdir | head -n1 | awk '{print $2}')
+        name=$(echo ${name#*=} | tr -d ' ' | tr -d "'")
+      }
+    fi
+  fi
+  chk_apk_size $apkdir
+  echo " Transfering ${apk}(${name}) to '$1'..."
+  if [ -d $SYSTEM/app/${name} ] || [ -d $SYSTEM/priv-app/${name} ] || [ -d $MODDIR$SYSTEM2/app/${name} ] || [ -d $MODDIR$SYSTEM2/priv-app/${name} ]; then
+    abort " App exists!"
+  else
+    mkdir -p ${MODDIR}${1}/${name}
+    cp -f $apkdir ${MODDIR}${1}/${name}/${name}.apk
+    if [ -d ${apkdir%/*}/lib ]; then
+      echo " Transfering libs"
+      cp -rf ${apkdir%/*}/lib ${MODDIR}${1}/${name}
+    fi
+    set_perm_recursive ${MODDIR}${1}/${name} 0 0 0755 0644
+    $patch_xml && [ ${1##*/} == "priv-app" ] && {
+      echo " Granting Permissions"
+      pp=0
+      app_perm=(); perm=()
+      for i in $(aapt d permissions $apkdir | grep -v 'package:' | awk '{print $2}'); do
+        _perm=$(echo ${i#*=} | tr -d "'")
+        perm[pp]=$_perm
+        pp=$((pp+1))
+      done
+      app_perm=($(echo "${perm[@]}" | tr ' ' '\n' | sort -u | tr '\n' ' '))
+      echo "<?xml version=\"1.0\" encoding=\"utf-8\"?>
 <!--
 	Generated by $MODTITLE by $AUTHOR
 -->
 <permissions>
     <privapp-permissions package=\"${name}\">" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
-			for i in ${app_perm[@]}; do
-				echo "        <permission name=\"$i\"/>" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
-			done
-			echo "    </privapp-permissions>
+      for i in ${app_perm[@]}; do
+        echo "        <permission name=\"$i\"/>" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
+      done
+      echo "    </privapp-permissions>
 </permissions>" >> $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
-			chmod 644 $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
-		}
-		echo " ${name} - ${W}Done${N}"
-	fi
+      chmod 644 $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
+    }
+    echo " ${name} - ${W}Done${N}"
+  fi
 }
 
 enter_apk_dir() {
-	clear
-	echo "Example: ${W}/sdcard/launcher.apk${N}"
-	echo " x - ${Bl}Back to Menu${N}"
-	echo -n "Enter APK Path: "
-	read apkdir
-	[ "$apkdir" == "x" ] && menu
-	echo "Checking if file exists..."
-	if [ -f "$apkdir" ]; then
-		echo " - OK"
-		apk=${apkdir##*/}
-		echo "Checking if file is an APK..."
-		tmpapk=${apk##*.}
-		if [ "$tmpapk" == "apk" ]; then
-			echo " - OK"
-			echo "Checking package name..."
-			name=${apk%'.apk'*}
-			if [ $use_aapt ]; then
-				name=$(aapt d badging $apkdir | head -n1 | awk '{print $2}')
-				name=${name#*=}
-			fi
-			name=$(echo $name | tr -d ' ' | tr -d "'")
-			echo " - $name"
-			if [ $privapp == 1 ] && [ $sysapp == 1 ]; then 
-				echo "Where to install?"
-				echo -n "< 1 - $SYSTEM/app | 2 - $SYSTEM/priv-app | 0 - cancel > : "
-				read loc
-				if [ "$loc" == 1 ]; then
-					systemize /system/app
-				elif [ "$loc" == 2 ]; then
-					systemize /system/priv-app
-				elif [ "$loc" == 0 ]; then
-					echo " $name canceled"; exit
-				else
-					abort "Invalid!"
-				fi
-			elif [ $sysapp == 1 ] && [ $privapp == 0 ]; then
-				systemize /system/app
-			elif [ $privapp == 1 ] && [ $sysapp == 0 ]; then
-				systemize /system/priv-app
-			else
-				abort "No installation directory!"
-			fi
-		else
-			abort "$apk is not an APK!"
-		fi
-	else
-		abort "$apkdir doesn't exist!"
-	fi
+  clear
+  echo "Example: ${W}/sdcard/launcher.apk${N}"
+  echo " x - ${Bl}Back to Menu${N}"
+  echo -n "Enter APK Path: "
+  read apkdir
+  [ "$apkdir" == "x" ] && menu
+  echo "Checking if file exists..."
+  if [ -f "$apkdir" ]; then
+    echo " - OK"
+    apk=${apkdir##*/}
+    echo "Checking if file is an APK..."
+    tmpapk=${apk##*.}
+    if [ "$tmpapk" == "apk" ]; then
+      echo " - OK"
+      echo "Checking package name..."
+      name=${apk%'.apk'*}
+      if [ $use_aapt ]; then
+        name=$(aapt d badging $apkdir | head -n1 | awk '{print $2}')
+        name=${name#*=}
+      fi
+      name=$(echo $name | tr -d ' ' | tr -d "'")
+      echo " - $name"
+      if [ $privapp == 1 ] && [ $sysapp == 1 ]; then
+        echo "Where to install?"
+        echo -n "< 1 - $SYSTEM/app | 2 - $SYSTEM/priv-app | 0 - cancel > : "
+        read loc
+        if [ "$loc" == 1 ]; then
+          systemize /system/app
+        elif [ "$loc" == 2 ]; then
+          systemize /system/priv-app
+        elif [ "$loc" == 0 ]; then
+          echo " $name canceled"; exit
+        else
+          abort "Invalid!"
+        fi
+      elif [ $sysapp == 1 ] && [ $privapp == 0 ]; then
+        systemize /system/app
+      elif [ $privapp == 1 ] && [ $sysapp == 0 ]; then
+        systemize /system/priv-app
+      else
+        abort "No installation directory!"
+      fi
+    else
+      abort "$apk is not an APK!"
+    fi
+  else
+    abort "$apkdir doesn't exist!"
+  fi
 }
 
 enter_apk_name() {
-	clear
-	echo "Enter the App Label of the installed app"
-	echo "Example: com.android.launcher"
-	echo " x - ${Bl}Back to Menu${N}"
-	echo -n " > "
-	read apklabel
-	if [ ! "$apklabel" ]; then
-		abort "error"
-	elif [ "$apklabel" == "x" ]; then
-		menu
-	fi
-	if [ $privapp == 1 ] && [ $sysapp == 1 ]; then
-		echo " Where to install?"
-		echo -n " < 1 - $SYSTEM/app | 2 - $SYSTEM/priv-app | 0 - cancel > : "
-		read loc
-		if [ "$loc" == 1 ]; then
-			installdir="app"
-		elif [ "$loc" == 2 ]; then
-			installdir="priv-app"
-		elif [ "$loc" == 0 ]; then
-			echo " $apklabel canceled"; exit
-		else
-			abort "Invalid!"
-		fi
-	elif [ -d $SYSTEM/priv-app ]; then
-		installdir="priv-app"
-	else
-		installdir="app"
-	fi
-	systemize /system/$installdir /data/app/${apklabel}-*/base.apk
-	[ $? -ne 0 ] && abort "Failed!"
+  clear
+  echo "Enter the App Label of the installed app"
+  echo "Example: com.android.launcher"
+  echo " x - ${Bl}Back to Menu${N}"
+  echo -n " > "
+  read apklabel
+  if [ ! "$apklabel" ]; then
+    abort "error"
+  elif [ "$apklabel" == "x" ]; then
+    menu
+  fi
+  if [ $privapp == 1 ] && [ $sysapp == 1 ]; then
+    echo " Where to install?"
+    echo -n " < 1 - $SYSTEM/app | 2 - $SYSTEM/priv-app | 0 - cancel > : "
+    read loc
+    if [ "$loc" == 1 ]; then
+      installdir="app"
+    elif [ "$loc" == 2 ]; then
+      installdir="priv-app"
+    elif [ "$loc" == 0 ]; then
+      echo " $apklabel canceled"; exit
+    else
+      abort "Invalid!"
+    fi
+  elif [ -d $SYSTEM/priv-app ]; then
+    installdir="priv-app"
+  else
+    installdir="app"
+  fi
+  systemize /system/$installdir /data/app/${apklabel}-*/base.apk
+  [ $? -ne 0 ] && abort "Failed!"
 }
 
 # Check apk size
 chk_apk_size() {
-	dir_app=$(echo $1)
-	free_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $3}')"
-	total_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $2}')"
-	apk_sizeM="$(du -m $dir_app | awk '{print $1}')"
-	[ -d ${dir_app%/*}/lib ] && apk_sizeM="$((apk_sizeM+$(du -ms ${dir_app%/*}/lib | awk '{print $1}')))"
-	if [ "$apk_sizeM" -gt "$((free_space-10))" ]; then
-		echo " Checking App size - ${W}${apk_sizeM}M${N}"
-		echo "- Insufficient $MOUNTPATH space!"
-		echo "- APK size: ${apk_sizeM}M | $MOUNTPATH Free: ${free_space}M"
-		echo "- Using magisk_merge.img to merge images..."
-		merge_img ${dir_app} 2>>$LOG
-	else
-		echo " Checking APK size - ${W}${apk_sizeM}M${N}"
-	fi
+  dir_app=$(echo $1)
+  free_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $3}')"
+  total_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $2}')"
+  apk_sizeM="$(du -m $dir_app | awk '{print $1}')"
+  [ -d ${dir_app%/*}/lib ] && apk_sizeM="$((apk_sizeM+$(du -ms ${dir_app%/*}/lib | awk '{print $1}')))"
+  if [ "$apk_sizeM" -gt "$((free_space-10))" ]; then
+    echo " Checking App size - ${W}${apk_sizeM}M${N}"
+    echo "- Insufficient $MOUNTPATH space!"
+    echo "- APK size: ${apk_sizeM}M | $MOUNTPATH Free: ${free_space}M"
+    echo "- Using magisk_merge.img to merge images..."
+    merge_img ${dir_app} 2>>$LOG
+  else
+    echo " Checking APK size - ${W}${apk_sizeM}M${N}"
+  fi
 }
 
 # Merge
 merge_img() {
-	apk_size=$(($(du -m $1 | awk '{print $1}')+2))
-	IMG=/data/adb/magisk_merge.img
-	install_dir=/dev/tmp/${ID}
-	path=/dev/magisk_merge
-	tmpmodpath=$path/${ID}
-	mkdir -p $install_dir
-	reqSizeM=$apk_size
-	MOUNTPATH=$path
-	mount_magisk_img  
-	cp -af $MODDIR/. $tmpmodpath
-	MODDIR=$tmpmodpath
+  apk_size=$(($(du -m $1 | awk '{print $1}')+2))
+  IMG=/data/adb/magisk_merge.img
+  install_dir=/dev/tmp/${ID}
+  path=/dev/magisk_merge
+  tmpmodpath=$path/${ID}
+  mkdir -p $install_dir
+  reqSizeM=$apk_size
+  MOUNTPATH=$path
+  mount_magisk_img
+  cp -af $MODDIR/. $tmpmodpath
+  MODDIR=$tmpmodpath
 }
 
 mount -o remount,rw $MOUNTPATH 2>>$LOG
@@ -338,197 +338,197 @@ busybox mount -o remount,rw /cache 2>>$LOG
 busybox mount -o rw,remount /cache 2>>$LOG
 
 menu_list_systemized_apps() {
-	clear
-	list_installed_apps 2>>$LOG
-	clear
-	echo "$div"
-	title_div "Installed Apps"
-	echo "$div"
-	echo ""
-	for i in $(seq 0 $((${#app[@]}-1))); do
-		echo " $((i+1)) - ${W}${app[i]}${N}" | tr '_' ' '
-	done
-	echo ""
-	echo " ${Bl}To systemize multiple apps, enter multiple number. Example:${N} \"1 $(echo ${#app[$((${#app[@]}/3))]}) $(echo ${#app[$((${#app[@]}/2))]})\""
-	echo " x - ${Bl}Back to Menu${N}"
-	echo " r - Refresh list"
-	echo " 0 -  Exit"
-	echo -n "[CHOICE]: "
-	read installed
-	[ "$installed" == "x" ] && menu
-	[ "$installed" == "r" ] && RESCAN=true && menu_list_systemized_apps
-	for i in $installed; do
-		if [ "$i" -gt ${#app[@]} ] || [ "$i" -lt 0 ] || [ "$i" == "" ] || [ -n "$(echo $i | tr -d '0-9')" ] ; then
-			abort "Invalid!"
-		elif [ "$i" == 0 ]; then
-			exit
-		else
-			echo "$div"
-			i=$((i-1))
-			echo "Systemizing ${W}${app[i]}${N}" | tr '_' ' '
-			get_cfg ${app[i]}
-			echo -n " Checking APK directory"
-			if [ -f $DIR_APP ]; then
-				echo " - ${W}OK${N}"
-				apkdir=$DIR_APP
-				apk=${apkdir##*/}
-				name=${apkdir%/*}; name=${name##*/}; name=$(echo $name | tr -d ' ' | tr -d "'" | tr -d '*' | tr -d '-')
-				echo " Checking package name - ${W}$PKG${N}"
-				if [ $privapp == 1 ] && [ $sysapp == 1 ]; then 
-					echo " Where to install?"
-					echo -n " < 1 - $SYSTEM/app | 2 - $SYSTEM/priv-app | 0 - cancel > : "
-					read loc
-					if [ "$loc" == 1 ]; then
-						systemize /system/app
-					elif [ "$loc" == 2 ]; then
-						systemize /system/priv-app
-					elif [ "$loc" == 0 ]; then
-						echo " ${app[i]} canceled"; true
-					else
-						abort "Invalid!"
-					fi
-				elif [ $sysapp == 1 ] && [ $privapp == 0 ]; then
-					systemize /system/app
-				elif [ $privapp == 1 ] && [ $sysapp == 0 ]; then
-					systemize /system/priv-app
-				else
-					abort " - No installation directory!"
-				fi  
-			else
-				abort " - APK doesn't exist!"
-			fi
-		fi
-	done
-	echo "Reboot to apply changes"
-	echo -n "Return to menu? < y | n >: "
-	read mchoice
-	[ "$mchoice" == "y" ] && menu || exit
+  clear
+  list_installed_apps 2>>$LOG
+  clear
+  echo "$div"
+  title_div "Installed Apps"
+  echo "$div"
+  echo ""
+  for i in $(seq 0 $((${#app[@]}-1))); do
+    echo " $((i+1)) - ${W}${app[i]}${N}" | tr '_' ' '
+  done
+  echo ""
+  echo " ${Bl}To systemize multiple apps, enter multiple number. Example:${N} \"1 $(echo ${#app[$((${#app[@]}/3))]}) $(echo ${#app[$((${#app[@]}/2))]})\""
+  echo " x - ${Bl}Back to Menu${N}"
+  echo " r - Refresh list"
+  echo " 0 -  Exit"
+  echo -n "[CHOICE]: "
+  read installed
+  [ "$installed" == "x" ] && menu
+  [ "$installed" == "r" ] && RESCAN=true && menu_list_systemized_apps
+  for i in $installed; do
+    if [ "$i" -gt ${#app[@]} ] || [ "$i" -lt 0 ] || [ "$i" == "" ] || [ -n "$(echo $i | tr -d '0-9')" ] ; then
+      abort "Invalid!"
+    elif [ "$i" == 0 ]; then
+      exit
+    else
+      echo "$div"
+      i=$((i-1))
+      echo "Systemizing ${W}${app[i]}${N}" | tr '_' ' '
+      get_cfg ${app[i]}
+      echo -n " Checking APK directory"
+      if [ -f $DIR_APP ]; then
+        echo " - ${W}OK${N}"
+        apkdir=$DIR_APP
+        apk=${apkdir##*/}
+        name=${apkdir%/*}; name=${name##*/}; name=$(echo $name | tr -d ' ' | tr -d "'" | tr -d '*' | tr -d '-')
+        echo " Checking package name - ${W}$PKG${N}"
+        if [ $privapp == 1 ] && [ $sysapp == 1 ]; then
+          echo " Where to install?"
+          echo -n " < 1 - $SYSTEM/app | 2 - $SYSTEM/priv-app | 0 - cancel > : "
+          read loc
+          if [ "$loc" == 1 ]; then
+            systemize /system/app
+          elif [ "$loc" == 2 ]; then
+            systemize /system/priv-app
+          elif [ "$loc" == 0 ]; then
+            echo " ${app[i]} canceled"; true
+          else
+            abort "Invalid!"
+          fi
+        elif [ $sysapp == 1 ] && [ $privapp == 0 ]; then
+          systemize /system/app
+        elif [ $privapp == 1 ] && [ $sysapp == 0 ]; then
+          systemize /system/priv-app
+        else
+          abort " - No installation directory!"
+        fi
+      else
+        abort " - APK doesn't exist!"
+      fi
+    fi
+  done
+  echo "Reboot to apply changes"
+  echo -n "Return to menu? < y | n >: "
+  read mchoice
+  [ "$mchoice" == "y" ] && menu || exit
 }
 
 revert_apps() {
-	list_systemized_apps 2>>$LOG
-	clear
-	echo "$div"
-	title_div "Revert"
-	echo "$div"
-	echo ""
-	for i in $(seq 1 $((${#rev_app[@]}-1))); do
-		echo " $i - ${W}${rev_app[i]}${N}" | tr '_' ' '
-	done
-	echo ""
-	echo " ${Bl}To systemize multiple apps, enter multiple number. Example:${N} \"1 ${#rev_app[$((${#rev_app[@]}/3))]} ${#rev_app[$((${#rev_app[@]}/2))]}\""
-	echo " x - ${Bl}Back to Menu${N}"
-	echo " 0 -  Exit"
-	echo -n "[CHOICE]: "
-	read revert
-	[ "$revert" == "x" ] && menu
-	for i in $revert; do
-		if [ "$i" -gt ${#rev_app[@]} ] || [ "$i" -lt 0 ] || [ "$i" == "" ] || [ -n "$(echo $i | tr -d '0-9')" ] ; then
-			abort "Invalid!"
-		elif [ "$i" == 0 ]; then
-			exit
-		else
-			echo "Reverting ${rev_app[i]}..." | tr '_' ' '
-			rm -rf ${rev_dir[i]}
-			rm -rf $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${rev_label[i]}.xml >>$LOG 2>$1
-		fi
-	done
-	echo "Reboot to apply changes"
-	echo -n "Return to menu? < y | n >: "
-	read mchoice
-	[ "$mchoice" == "y" ] && menu || exit
+  list_systemized_apps 2>>$LOG
+  clear
+  echo "$div"
+  title_div "Revert"
+  echo "$div"
+  echo ""
+  for i in $(seq 1 $((${#rev_app[@]}-1))); do
+    echo " $i - ${W}${rev_app[i]}${N}" | tr '_' ' '
+  done
+  echo ""
+  echo " ${Bl}To systemize multiple apps, enter multiple number. Example:${N} \"1 ${#rev_app[$((${#rev_app[@]}/3))]} ${#rev_app[$((${#rev_app[@]}/2))]}\""
+  echo " x - ${Bl}Back to Menu${N}"
+  echo " 0 -  Exit"
+  echo -n "[CHOICE]: "
+  read revert
+  [ "$revert" == "x" ] && menu
+  for i in $revert; do
+    if [ "$i" -gt ${#rev_app[@]} ] || [ "$i" -lt 0 ] || [ "$i" == "" ] || [ -n "$(echo $i | tr -d '0-9')" ] ; then
+      abort "Invalid!"
+    elif [ "$i" == 0 ]; then
+      exit
+    else
+      echo "Reverting ${rev_app[i]}..." | tr '_' ' '
+      rm -rf ${rev_dir[i]}
+      rm -rf $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${rev_label[i]}.xml >>$LOG 2>$1
+    fi
+  done
+  echo "Reboot to apply changes"
+  echo -n "Return to menu? < y | n >: "
+  read mchoice
+  [ "$mchoice" == "y" ] && menu || exit
 }
 
 set_selinux() {
-	clear
-	echo "$div"
-	title_div "Set SELinux"
-	echo "$div"
-	echo " This setting turns on the ability to dynamically disable"
-	echo " SELinux if enabled (only when needed to enable unrestricted"
-	echo " actions) for the script to execute noticeably faster."
-	echo " It is fairly safe to do since it will immediately return"
-	echo " SELinux status after a certain action."
-	echo "$div"
-	echo ""
-	stat_color=$G
-	se_set="$(grep_prop selinux $MODDIR/module.prop)"
-	[ "$se_set" != true ] && se_set=false && stat_color=$R
-	echo " SELinux Status: $(getenforce)"
-	echo " Enabled: ${stat_color}$se_set${N}"
-	[ $(getenforce) == "Permissive" ] && echo " ${Y}SELinux is disabled! No need to enable this if it's permissive lmao${N}"
-	echo ""
-	echo " c - ${W}Change status${N}"
-	echo " x - ${Bl}Back to Menu${N}"
-	echo " 0 - Exit"
-	echo -n "[CHOICE]: "
-	read sechoice
-	case "$sechoice" in
-		x|X) menu;;
-		c|C) if $se_set; then
-				set_file_prop selinux false $MODDIR/module.prop
-				echo "Set to false"
-				echo "Exiting script to apply changes"
-				exit
-			else
-				set_file_prop selinux true $MODDIR/module.prop
-				echo "Set to true"
-				echo "Exiting script to apply changes"
-				exit
-			fi;;
-		0) exit;;
-		*) echo "Invalid!"; exit;;
-	esac
+  clear
+  echo "$div"
+  title_div "Set SELinux"
+  echo "$div"
+  echo " This setting turns on the ability to dynamically disable"
+  echo " SELinux if enabled (only when needed to enable unrestricted"
+  echo " actions) for the script to execute noticeably faster."
+  echo " It is fairly safe to do since it will immediately return"
+  echo " SELinux status after a certain action."
+  echo "$div"
+  echo ""
+  stat_color=$G
+  se_set="$(grep_prop selinux $MODDIR/module.prop)"
+  [ "$se_set" != true ] && se_set=false && stat_color=$R
+  echo " SELinux Status: $(getenforce)"
+  echo " Enabled: ${stat_color}$se_set${N}"
+  [ $(getenforce) == "Permissive" ] && echo " ${Y}SELinux is disabled! No need to enable this if it's permissive lmao${N}"
+  echo ""
+  echo " c - ${W}Change status${N}"
+  echo " x - ${Bl}Back to Menu${N}"
+  echo " 0 - Exit"
+  echo -n "[CHOICE]: "
+  read sechoice
+  case "$sechoice" in
+    x|X) menu;;
+    c|C) if $se_set; then
+        set_file_prop selinux false $MODDIR/module.prop
+        echo "Set to false"
+        echo "Exiting script to apply changes"
+        exit
+      else
+        set_file_prop selinux true $MODDIR/module.prop
+        echo "Set to true"
+        echo "Exiting script to apply changes"
+        exit
+      fi;;
+    0) exit;;
+    *) echo "Invalid!"; exit;;
+  esac
 }
 
 menu() {
-	mod_head
-	stat_color=$G
-	se_set="$(grep_prop selinux $MODDIR/module.prop)"
-	[ "$se_set" != true ] && se_set=false && stat_color=$R
-	echo "Set SELinux Enabled: ${stat_color}$se_set${N}"
-	echo "SELinux Status: $(getenforce)"
-	echo "$div"
-	echo ""
-	echo " 1 - Systemize Installed Apps (Listed)"
-	echo " 2 - Systemize Installed Apps (Enter label) "
-	echo " 3 - Systemize given APK"
-	if [[ $(find $MODDIR -name "*.apk" 2>>$LOG) ]]; then
-		echo " 4 - Revert Systemized Apps"
-	fi
-	echo " s - Set SELinux"
-	echo " d - ${C}Donate${N}"
-	echo " 0 - Exit"
-	echo ""
-	echo -n "[CHOICE]: "
-	read choice
-	case "$choice" in
-		1) menu_list_systemized_apps;;
-		2) enter_apk_name; exit $?;;
-		3) enter_apk_dir; exit $?;;
-		4) revert_apps; exit $?;;
+  mod_head
+  stat_color=$G
+  se_set="$(grep_prop selinux $MODDIR/module.prop)"
+  [ "$se_set" != true ] && se_set=false && stat_color=$R
+  echo "Set SELinux Enabled: ${stat_color}$se_set${N}"
+  echo "SELinux Status: $(getenforce)"
+  echo "$div"
+  echo ""
+  echo " 1 - Systemize Installed Apps (Listed)"
+  echo " 2 - Systemize Installed Apps (Enter label) "
+  echo " 3 - Systemize given APK"
+  if [[ $(find $MODDIR -name "*.apk" 2>>$LOG) ]]; then
+    echo " 4 - Revert Systemized Apps"
+  fi
+  echo " s - Set SELinux"
+  echo " d - ${C}Donate${N}"
+  echo " 0 - Exit"
+  echo ""
+  echo -n "[CHOICE]: "
+  read choice
+  case "$choice" in
+    1) menu_list_systemized_apps;;
+    2) enter_apk_name; exit $?;;
+    3) enter_apk_dir; exit $?;;
+    4) revert_apps; exit $?;;
 
-		d|D) am start https://paypal.me/veez21 >>$LOG 2>&1;;
-		logs) upload_logs;;
-		s|S) set_selinux;;
-		0) exit;;
-		*) echo "Invalid!"; exit 1;;
-	esac
+    d|D) am start https://paypal.me/veez21 >>$LOG 2>&1;;
+    logs) upload_logs;;
+    s|S) set_selinux;;
+    0) exit;;
+    *) echo "Invalid!"; exit 1;;
+  esac
 }
 
 case "$1" in
-	-a) shift
-		for i in "$@"; do [ -d $SYSTEM/priv-app ] && systemize /system/priv-app "/data/app/${i}-*/base.apk" || systemize /system/app "/data/app/${i}-*/base.apk" "$i"; echo "$div"; done; exit;;
-	-d) shift
-		for i in "$@"; do [ -d $SYSTEM/priv-app ] && systemize /system/priv-app "$i" || systemize /system/app "$i"; echo "$div"; done; exit;;
-	-l) list_systemized_apps 2>>$LOG
-		echo
-		for i in ${!rev_dir[@]}; do
-			title_div "App $i"
-			echo "Name\t: $(echo ${rev_app[i]}| tr '_' ' ')\nLabel\t: ${rev_label[i]}\nDirectory\t: $(echo ${rev_dir[i]} | sed 's/.*\/system\///g')" | expand -t 10
-		done
-		exit;;
-	-h|--help) help_me;;
+  -a) shift
+    for i in "$@"; do [ -d $SYSTEM/priv-app ] && systemize /system/priv-app "/data/app/${i}-*/base.apk" || systemize /system/app "/data/app/${i}-*/base.apk" "$i"; echo "$div"; done; exit;;
+  -d) shift
+    for i in "$@"; do [ -d $SYSTEM/priv-app ] && systemize /system/priv-app "$i" || systemize /system/app "$i"; echo "$div"; done; exit;;
+  -l) list_systemized_apps 2>>$LOG
+    echo
+    for i in ${!rev_dir[@]}; do
+      title_div "App $i"
+      echo "Name\t: $(echo ${rev_app[i]}| tr '_' ' ')\nLabel\t: ${rev_label[i]}\nDirectory\t: $(echo ${rev_dir[i]} | sed 's/.*\/system\///g')" | expand -t 10
+    done
+    exit;;
+  -h|--help) help_me;;
 esac
 
 menu
