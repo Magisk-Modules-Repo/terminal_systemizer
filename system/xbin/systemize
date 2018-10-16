@@ -67,7 +67,6 @@ IFUPDATED=""
 perm_xml1=$SYSTEM/etc/permissions/privapp-permissions-platform.xml
 perm_xml=$MODDIR$SYSTEM2/etc/permissions/privapp-permissions-platform.xml
 [ -f $perm_xml1 ] && patch_xml=true || patch_xml=false
-mkdir -p $MODDIR$SYSTEM2/etc/permissions 2>/dev/null
 LISTFILE=/cache/systemize.list
 BOOTMODE=true
 RESCAN=true
@@ -132,7 +131,8 @@ list_installed_apps() {
 # List systemized apps
 list_systemized_apps() {
   systemized_apps=(); rev_dir=(); rev_label=(); rev_app=()
-  systemized_apps=($(find $MODDIR -name "*.apk" -type f))
+  [ "$tmpmodpath" ] && MODDIRS="$MODDIR $path" || MODDIRS="$MODDIR"
+  systemized_apps=($(find $MODDIRS -name "*.apk" -type f))
   cc=1
   for i in ${systemized_apps[@]}; do
     ProgressBar $cc ${#systemized_apps[@]}
@@ -185,6 +185,7 @@ systemize() {
     set_perm_recursive ${MODDIR}${1}/${name} 0 0 0755 0644
     $patch_xml && [ ${1##*/} == "priv-app" ] && {
       echo " Granting Permissions"
+      mkdir -p $MODDIR$SYSTEM2/etc/permissions 2>/dev/null
       pp=0
       app_perm=(); perm=()
       for i in $(aapt d permissions $apkdir | grep -v 'package:' | awk '{print $2}'); do
@@ -324,7 +325,6 @@ merge_img() {
   reqSizeM=$apk_size
   MOUNTPATH=$path
   mount_magisk_img
-  cp -af $MODDIR/. $tmpmodpath
   MODDIR=$tmpmodpath
 }
 
