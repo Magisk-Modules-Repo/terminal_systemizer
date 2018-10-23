@@ -20,6 +20,10 @@ or
 
 ## Changelog
 
+### v14.3
+* Fix an error in systemizing large apps
+* Move systemize to xbin
+* Misc improvements
 ### v14.2.1
 * Misc improvements
 ### v14.2
