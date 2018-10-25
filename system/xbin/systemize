@@ -456,7 +456,7 @@ set_selinux() {
   [ "$se_set" != true ] && se_set=false && stat_color=$R
   echo " SELinux Status: $(getenforce)"
   echo " Enabled: ${stat_color}$se_set${N}"
-  [ $(getenforce) == "Permissive" ] && echo " ${Y}SELinux is disabled! No need to enable this if it's permissive lmao${N}"
+  [ $(getenforce) == "Permissive" ] && echo " ${Y}SELinux is disabled! No need to enable this if it's permissive.${N}"
   echo ""
   echo " c - ${W}Change status${N}"
   echo " x - ${Bl}Back to Menu${N}"
