@@ -343,13 +343,6 @@ chk_apk_size() {
 }
 
 mount -o remount,rw $MOUNTPATH 2>>$LOG
-mount -o rw,remount $MOUNTPATH 2>>$LOG
-mount -o remount,rw /cache 2>>$LOG
-mount -o rw,remount /cache 2>$LOG
-busybox mount -o remount,rw $MOUNTPATH 2>>$LOG
-busybox mount -o rw,remount $MOUNTPATH 2>>$LOG
-busybox mount -o remount,rw /cache 2>>$LOG
-busybox mount -o rw,remount /cache 2>>$LOG
 
 menu_list_systemized_apps() {
   clear
