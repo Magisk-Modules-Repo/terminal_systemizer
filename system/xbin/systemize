@@ -212,6 +212,7 @@ systemize() {
 	  unmount_magisk_img
 	  IMG=$ORIGIMG
 	  MOUNTPATH=$ORIGMOUNTPATH
+	  MODDIR=$ORIGMODDIR
 	}
   fi
 }
@@ -310,9 +311,11 @@ merge_img() {
   IMG=/data/adb/magisk_merge.img
   [ ! "$ORIGMOUNTPATH" ] && ORIGMOUNTPATH=$MOUNTPATH
   MOUNTPATH=$path
+  [ ! "$ORIGMODDIR" ] && ORIGMODDIR=$MODDIR
+  MODDIR=$tmpmodpath
   reqSizeM=$apk_size
   mount_magisk_img
-  MODDIR=$tmpmodpath
+  cp -rf $ORIGMODDIR/. $MODDIR
 }
 
 # Check apk size
