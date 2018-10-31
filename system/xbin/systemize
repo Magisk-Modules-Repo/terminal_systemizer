@@ -296,6 +296,20 @@ enter_apk_name() {
   [ $? -ne 0 ] && abort "Failed!"
 }
 
+# Merge
+merge_img() {
+  apk_size=$(($(du -m $1 | awk '{print $1}')+2))
+  path=/dev/magisk_merge
+  tmpmodpath=$path/${ID}
+  [ ! "$ORIGIMG" ] && ORIGIMG=$IMG
+  IMG=/data/adb/magisk_merge.img
+  [ ! "$ORIGMOUNTPATH" ] && ORIGMOUNTPATH=$MOUNTPATH
+  MOUNTPATH=$path
+  reqSizeM=$apk_size
+  mount_magisk_img
+  MODDIR=$tmpmodpath
+}
+
 # Check apk size
 chk_apk_size() {
   dir_app=$(echo $1)
@@ -312,20 +326,6 @@ chk_apk_size() {
   else
     echo " Checking APK size - ${W}${apk_sizeM}M${N}"
   fi
-}
-
-# Merge
-merge_img() {
-  apk_size=$(($(du -m $1 | awk '{print $1}')+2))
-  IMG=/data/adb/magisk_merge.img
-  install_dir=/dev/tmp/${ID}
-  path=/dev/magisk_merge
-  tmpmodpath=$path/${ID}
-  mkdir -p $install_dir
-  reqSizeM=$apk_size
-  MOUNTPATH=$path
-  mount_magisk_img
-  MODDIR=$tmpmodpath
 }
 
 mount -o remount,rw $MOUNTPATH 2>>$LOG
