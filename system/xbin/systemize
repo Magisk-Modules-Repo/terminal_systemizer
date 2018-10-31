@@ -208,6 +208,7 @@ systemize() {
       chmod 644 $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
     }
     echo " ${name} - ${W}Done${N}"
+	$UNMOUNTIMG && unmount_magisk_img
   fi
 }
 
@@ -317,11 +318,13 @@ chk_apk_size() {
   total_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $2}')"
   apk_sizeM="$(du -m $dir_app | awk '{print $1}')"
   [ -d ${dir_app%/*}/lib ] && apk_sizeM="$((apk_sizeM+$(du -ms ${dir_app%/*}/lib | awk '{print $1}')))"
+  UNMOUNTIMG=false
   if [ "$apk_sizeM" -gt "$((free_space-10))" ]; then
     echo " Checking App size - ${W}${apk_sizeM}M${N}"
     echo "- Insufficient $MOUNTPATH space!"
     echo "- APK size: ${apk_sizeM}M | $MOUNTPATH Free: ${free_space}M"
     echo "- Using magisk_merge.img to merge images..."
+    UNMOUNTIMG=true
     merge_img ${dir_app} 2>>$LOG
   else
     echo " Checking APK size - ${W}${apk_sizeM}M${N}"
