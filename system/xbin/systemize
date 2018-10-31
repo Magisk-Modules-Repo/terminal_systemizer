@@ -305,7 +305,6 @@ enter_apk_name() {
 
 # Merge
 merge_img() {
-  apk_size=$(($(du -m $1 | awk '{print $1}')+2))
   path=/dev/magisk_merge
   tmpmodpath=$path/${ID}
   [ ! "$ORIGIMG" ] && ORIGIMG=$IMG
@@ -314,7 +313,7 @@ merge_img() {
   MOUNTPATH=$path
   [ ! "$ORIGMODDIR" ] && ORIGMODDIR=$MODDIR
   MODDIR=$tmpmodpath
-  reqSizeM=$apk_size
+  reqSizeM=$apk_sizeM
   mount_magisk_img
   cp -rf $ORIGMODDIR/. $MODDIR
 }
