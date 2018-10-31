@@ -20,6 +20,9 @@ or
 
 ## Changelog
 
+### v15
+* Properly fix systemizing when magisk.img is out of space
+* Misc improvements
 ### v14.3
 * Fix an error in systemizing large apps
 * Move systemize to xbin

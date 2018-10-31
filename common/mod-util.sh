@@ -13,13 +13,22 @@ if [ -d /system_root ]; then
   isABDevice=true
   SYSTEM=/system_root/system
   SYSTEM2=/system
+  CACHELOC=/data/cache
 else
   isABDevice=false
   SYSTEM=/system
   SYSTEM2=/system
+  CACHELOC=/cache
 fi
 
-#=========================== Set Busybox (Used by Magisk) up
+#=========================== Set Busybox up
+# Variables:
+#  BBok - If busybox detection was ok (true/false)
+#  _bb - Busybox binary directory
+#  _bbname - Busybox name
+
+# set_busybox <busybox binary>
+# alias busybox applets
 set_busybox() {
   if [ -x "$1" ]; then
     for i in $(${1} --list); do
@@ -42,22 +51,21 @@ elif [ ! -x $SYSTEM/xbin/busybox ]; then
 else
   alias busybox=""
 fi
-if [ -x $SYSTEM/xbin/busybox ]; then
+if [ $_busybox ]; then
+  true
+elif [ -x $SYSTEM/xbin/busybox ]; then
   _bb=$SYSTEM/xbin/busybox
 elif [ -x $SYSTEM/bin/busybox ]; then
   _bb=$SYSTEM/bin/busybox
-elif [ $_busybox ]; then
-  true
 else
-  echo "! Busybox not detected.."
+  echo "! Busybox not detected"
   echo "Please install one (@osm0sis' busybox recommended)"
   false
 fi
 [ $? -ne 0 ] && exit $?
 alias echo='echo -e'
 [ -n "$LOGNAME" ] && alias clear='echo'
-_bbname=$(busybox | head -n1)
-_bbname=${_bbname%'('*}
+_bbname="$($_bb | head -n1 | awk '{print $1,$2}')"
 BBok=true
 if [ "$_bbname" == "" ]; then
   _bbname="BusyBox not found!"
@@ -70,7 +78,7 @@ fi
 [ -f /data/adb/magisk/util_functions.sh ] && . /data/adb/magisk/util_functions.sh || exit 1
 
 # Device Info
-# BRAND MODEL DEVICE API ABI ABI2 ABILONG ARCH
+# Variables: BRAND MODEL DEVICE API ABI ABI2 ABILONG ARCH
 BRAND=$(getprop ro.product.brand)
 MODEL=$(getprop ro.product.model)
 DEVICE=$(getprop ro.product.device)
@@ -104,11 +112,14 @@ loadBar=' '			# Load UI
   G=''; R=''; Y=''; B=''; V=''; Bl=''; C=''; W=''; N=''; BGBL=''; loadBar='=';
 }
 
-# Divider (based on $MODTITLE, $VER, and $REL characters)
+# No. of characters in $MODTITLE, $VER, and $REL
 character_no=$(echo "$MODTITLE $VER $REL" | tr " " '_' | wc -c)
+
+# Divider
 div="${Bl}$(printf '%*s' "${character_no}" '' | tr " " "=")${N}"
 
-# Title Div
+# title_div <title>
+# based on $div with <title>
 title_div() {
   no=$(echo "$@" | wc -c)
   extdiv=$((no-character_no))
@@ -129,6 +140,7 @@ set_file_prop() {
 }
 
 # https://github.com/fearside/ProgressBar
+# ProgressBar <progress> <total>
 ProgressBar() {
 # Process data
   _progress=$(((${1}*100/${2}*100)/100))
@@ -145,6 +157,7 @@ printf "\rProgress : ${BGBL}|${N}${_done// /${BGBL}$loadBar${N}}${_left// / }${B
 }
 
 #https://github.com/fearside/SimpleProgressSpinner
+# Spinner <message>
 Spinner() {
 
 # Choose which character to show.
@@ -161,7 +174,7 @@ esac
 printf "\r${@} [${_indicator}]"
 }
 
-# "cmd & spinner [message]"
+# cmd & spinner <message>
 e_spinner() {
   PID=$!
   h=0; anim='-\|/';
@@ -173,12 +186,14 @@ e_spinner() {
 }
 
 # test_connection
+# tests if there's internet connection
 test_connection() {
   echo -n "Testing internet connection "
   ping -q -c 1 -W 1 google.com >/dev/null 2>/dev/null && echo "- OK" || { echo "Error"; false; }
 }
 
 # Log files will be uploaded to termbin.com
+# Logs included: VERLOG LOG oldVERLOG oldLOG
 upload_logs() {
   $BBok && {
     test_connection
