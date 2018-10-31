@@ -208,7 +208,11 @@ systemize() {
       chmod 644 $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${name}.xml
     }
     echo " ${name} - ${W}Done${N}"
-	$UNMOUNTIMG && unmount_magisk_img
+	$UNMOUNTIMG && {
+	  unmount_magisk_img
+	  IMG=$ORIGIMG
+	  MOUNTPATH=$ORIGMOUNTPATH
+	}
   fi
 }
 
