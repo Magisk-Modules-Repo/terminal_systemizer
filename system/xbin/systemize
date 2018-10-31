@@ -70,6 +70,7 @@ perm_xml=$MODDIR$SYSTEM2/etc/permissions/privapp-permissions-platform.xml
 LISTFILE=/cache/systemize.list
 BOOTMODE=true
 RESCAN=true
+MERGEIMG=/data/adb/magisk_merge.img
 use_cmd=false
 se_set=false
 
@@ -308,7 +309,7 @@ merge_img() {
   path=/dev/magisk_merge
   tmpmodpath=$path/${ID}
   [ ! "$ORIGIMG" ] && ORIGIMG=$IMG
-  IMG=/data/adb/magisk_merge.img
+  IMG=$MERGEIMG
   [ ! "$ORIGMOUNTPATH" ] && ORIGMOUNTPATH=$MOUNTPATH
   MOUNTPATH=$path
   [ ! "$ORIGMODDIR" ] && ORIGMODDIR=$MODDIR
@@ -330,7 +331,11 @@ chk_apk_size() {
     echo " Checking App size - ${W}${apk_sizeM}M${N}"
     echo "- Insufficient $MOUNTPATH space!"
     echo "- APK size: ${apk_sizeM}M | $MOUNTPATH Free: ${free_space}M"
-    echo "- Using magisk_merge.img to merge images..."
+    echo "- Using magisk_merge.img in systemizing..."
+    UNMOUNTIMG=true
+    merge_img ${dir_app} 2>>$LOG
+  elif [ -f "$MERGEIMG" ]; then
+    echo "- Using magisk_merge.img in systemizing..."
     UNMOUNTIMG=true
     merge_img ${dir_app} 2>>$LOG
   else
