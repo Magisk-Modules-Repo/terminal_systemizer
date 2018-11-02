@@ -220,20 +220,20 @@ systemize() {
 
 enter_apk_dir() {
   clear
+  echo "Enter APK Path"
   echo "Example: ${W}/sdcard/launcher.apk${N}"
   echo " x - ${Bl}Back to Menu${N}"
-  echo -n "Enter APK Path: "
+  echo -n " > "
   read apkdir
   [ "$apkdir" == "x" ] && menu
-  echo "Checking if file exists..."
+  echo -n "Checking if file exists"
   if [ -f "$apkdir" ]; then
     echo " - OK"
     apk=${apkdir##*/}
-    echo "Checking if file is an APK..."
-    tmpapk=${apk##*.}
-    if [ "$tmpapk" == "apk" ]; then
+    echo -n "Checking if file is an APK"
+    if [ "${apk##*.}" == "apk" ]; then
       echo " - OK"
-      echo "Checking package name..."
+      echo -n "Checking package name"
       name=${apk%'.apk'*}
       if [ $use_aapt ]; then
         name=$(aapt d badging $apkdir | head -n1 | awk '{print $2}')
@@ -259,13 +259,13 @@ enter_apk_dir() {
       elif [ $privapp == 1 ] && [ $sysapp == 0 ]; then
         systemize /system/priv-app
       else
-        abort "No installation directory!"
+        abort " - No installation directory!"
       fi
     else
-      abort "$apk is not an APK!"
+      abort " - $apk is not an APK!"
     fi
   else
-    abort "$apkdir doesn't exist!"
+    abort " - $apkdir doesn't exist!"
   fi
 }
 
