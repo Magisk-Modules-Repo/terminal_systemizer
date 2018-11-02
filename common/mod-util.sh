@@ -143,7 +143,7 @@ set_file_prop() {
 # ProgressBar <progress> <total>
 ProgressBar() {
 # Determine Screen Size
-  if [[ "$COLUMNS" -le "53" ]]; then
+  if [[ "$COLUMNS" -le "57" ]]; then
     local var1=2
 	local var2=20
   else
