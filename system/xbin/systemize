@@ -175,6 +175,12 @@ systemize() {
   chk_apk_size $apkdir
   echo " Transfering ${apk}(${name}) to '$1'..."
   if [ -d $SYSTEM/app/${name} ] || [ -d $SYSTEM/priv-app/${name} ] || [ -d $MODDIR$SYSTEM2/app/${name} ] || [ -d $MODDIR$SYSTEM2/priv-app/${name} ]; then
+	$UNMOUNTIMG && {
+	  unmount_magisk_img
+	  IMG=$ORIGIMG
+	  MOUNTPATH=$ORIGMOUNTPATH
+	  MODDIR=$ORIGMODDIR
+	}
     abort " App exists!"
   else
     mkdir -p ${MODDIR}${1}/${name}
