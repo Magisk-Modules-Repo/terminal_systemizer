@@ -364,8 +364,8 @@ menu_list_systemized_apps() {
   echo ""
   echo " ${Bl}To systemize multiple apps, enter multiple number. Example:${N} \"1 $(echo ${#app[$((${#app[@]}/3))]}) $(echo ${#app[$((${#app[@]}/2))]})\""
   echo " x - ${Bl}Back to Menu${N}"
-  echo " r - Refresh list"
-  echo " 0 -  Exit"
+  echo " r - ${Bl}Refresh list${N}"
+  echo " 0 - ${Bl}Exit${N}"
   echo -n "[CHOICE]: "
   read installed
   [ "$installed" == "x" ] && menu
