@@ -20,6 +20,10 @@ or
 
 ## Changelog
 
+### v15.1
+* Update mod-util
+  * This contains a fix for the ProgressBar on small devices (with small dpi)
+* Misc improvements
 ### v15
 * Properly fix systemizing when magisk.img is out of space
 * Misc improvements
@@ -38,13 +42,4 @@ or
 * Add Set SELinux option to make app detection faster
 * Make "Enter Label" option faster and more efficient
 * Name apk to it's parent folder
-* Misc improvements
-### v13.5.1
-* Fix app detection
-### v13.5
-* Fix errors when detecting $MOUNTPOINT free space
-* Misc improvements
-### v13.4.1
-* Faster app loading (noticeable) when in ADB
-* Improve xml file generated
 * Misc improvements
