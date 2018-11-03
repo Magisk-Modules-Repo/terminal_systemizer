@@ -42,7 +42,7 @@ set_busybox() {
 }
 _busybox=false
 if [ -d /sbin/.core/busybox ]; then
-  PATH=$PATH:/sbin/.core/busybox
+  PATH=/sbin/.core/busybox:$PATH
   _bb=/sbin/.core/busybox/busybox
   _busybox=true
 elif [ ! -x $SYSTEM/xbin/busybox ]; then
