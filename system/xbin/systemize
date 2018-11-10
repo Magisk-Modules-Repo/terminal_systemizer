@@ -94,8 +94,8 @@ fi
 [ -d $SYSTEM/priv-app ] && privapp=1
 
 # Detect free space
-free_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $4}')"
-total_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $2}')"
+free_space="$(df -m $MOUNTPATH | tail -n1 | awk '{print $4}')"
+total_space="$(df -m $MOUNTPATH | tail -n1 | awk '{print $2}')"
 
 # List installed apps
 list_installed_apps() {
@@ -327,8 +327,8 @@ merge_img() {
 # Check apk size
 chk_apk_size() {
   dir_app=$(echo $1)
-  free_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $3}')"
-  total_space="$(busybox df -m $MOUNTPATH | tail -n1 | awk '{print $2}')"
+  free_space="$(df -m $MOUNTPATH | tail -n1 | awk '{print $3}')"
+  total_space="$(df -m $MOUNTPATH | tail -n1 | awk '{print $2}')"
   apk_sizeM="$(du -m $dir_app | awk '{print $1}')"
   [ -d ${dir_app%/*}/lib ] && apk_sizeM="$((apk_sizeM+$(du -ms ${dir_app%/*}/lib | awk '{print $1}')))"
   UNMOUNTIMG=false
