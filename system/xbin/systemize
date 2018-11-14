@@ -512,7 +512,7 @@ menu() {
     echo " 4 - Revert Systemized Apps"
   fi
   echo " s - Set SELinux"
-  [ "$((RANDOM%2+1))" -eq "2" ] && echo " d - ${C}Donate${N}"
+  prandom " d - ${C}Donate${N}"
   echo " 0 - Exit"
   echo ""
   echo -n "[CHOICE]: "
