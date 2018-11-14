@@ -149,10 +149,9 @@ list_systemized_apps() {
 }
 
 get_cfg() {
-  APP_NAME=$(grep -wm1 "=${1}^" $LISTFILE | tr '^=' ' ' | awk '{print $2}')
-  DIR_APP=$(grep -wm1 "=${1}^" $LISTFILE | tr '^=' ' ' | awk '{print $3}')
-  PKG=$(grep -wm1 "=${1}^" $LISTFILE | tr '^=' ' ' | awk '{print $4}')
-  [ $? -gt 0 ] && abort "Package doesn't exist!"
+  APP_NAME=$(grep -wm1 "=${1}^" $LISTFILE | tr '^=' ' ' | awk '{print $2}') || abort "Package doesn't exist!"
+  DIR_APP=$(grep -wm1 "=${1}^" $LISTFILE | tr '^=' ' ' | awk '{print $3}') || abort "Package doesn't exist!"
+  PKG=$(grep -wm1 "=${1}^" $LISTFILE | tr '^=' ' ' | awk '{print $4}') || abort "Package doesn't exist!"
 }
 
 # Systemize function
