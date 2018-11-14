@@ -5,20 +5,25 @@
 #
 ##########################################################################################
 
-MODUTILVER=v2.1
-MODUTILVCODE=21
+MODUTILVER=v2.2
+MODUTILVCODE=22
 
-#=========================== Determine if A/B OTA device
-if [ -d /system_root ]; then
-  isABDevice=true
-  SYSTEM=/system_root/system
-  SYSTEM2=/system
-  CACHELOC=/data/cache
-else
-  isABDevice=false
-  SYSTEM=/system
-  SYSTEM2=/system
-  CACHELOC=/cache
+# Check A/B slot
+SLOT=`grep_cmdline androidboot.slot_suffix`
+if [ -z $SLOT ]; then
+  SLOT=_`grep_cmdline androidboot.slot`
+  [ $SLOT = "_" ] && {
+    SLOT=
+    isABDevice=true
+    SYSTEM=/system_root/system
+    SYSTEM2=/system
+    CACHELOC=/data/cache
+  } || {
+    isABDevice=false
+    SYSTEM=/system
+    SYSTEM2=/system
+    CACHELOC=/cache
+  }
 fi
 
 #=========================== Set Busybox up
@@ -33,7 +38,7 @@ set_busybox() {
   if [ -x "$1" ]; then
     for i in $(${1} --list); do
       if [ "$i" != 'echo' ]; then
-        alias "$i"="${1} $i" 2>>$LOG >>$LOG
+        alias "$i"="${1} $i" >>$LOG 2>&1
       fi
     done
     _busybox=true
@@ -74,9 +79,6 @@ fi
 
 #=========================== Default Functions and Variables
 
-# Import util_functions.sh
-[ -f /data/adb/magisk/util_functions.sh ] && . /data/adb/magisk/util_functions.sh || exit 1
-
 # Device Info
 # Variables: BRAND MODEL DEVICE API ABI ABI2 ABILONG ARCH
 BRAND=$(getprop ro.product.brand)
@@ -113,17 +115,18 @@ loadBar=' '			# Load UI
 }
 
 # No. of characters in $MODTITLE, $VER, and $REL
-character_no=$(echo "$MODTITLE $VER $REL" | tr " " '_' | wc -c)
+character_no=$(echo "$MODTITLE $VER $REL" | wc -c)
 
 # Divider
 div="${Bl}$(printf '%*s' "${character_no}" '' | tr " " "=")${N}"
 
-# title_div <title>
+# title_div [-c] <title>
 # based on $div with <title>
 title_div() {
-  no=$(echo "$@" | wc -c)
-  extdiv=$((no-character_no))
-  echo "${W}$@${N} ${Bl}$(printf '%*s' "$extdiv" '' | tr " " "=")${N}"
+  [ "$1" == "-c" ] && local character_no=$2 && shift 2
+  [ -z "$1" ] && { local message=; no=0; } || { local message="$@ "; local no=$(echo "$@" | wc -c); }
+  [ $character_no -gt $no ] && local extdiv=$((character_no-no)) || { echo "Invalid!"; return; }
+  echo "${W}$message${N}${Bl}$(printf '%*s' "$extdiv" '' | tr " " "=")${N}"
 }
 
 # set_file_prop <property> <value> <prop.file>
@@ -195,21 +198,19 @@ e_spinner() {
 # tests if there's internet connection
 test_connection() {
   echo -n "Testing internet connection "
-  ping -q -c 1 -W 1 google.com >/dev/null 2>/dev/null && echo "- OK" || { echo "Error"; false; }
+  ping -q -c 1 -W 1 google.com >/dev/null 2>&1 && echo "- OK" || { echo "Error"; false; }
 }
 
 # Log files will be uploaded to termbin.com
 # Logs included: VERLOG LOG oldVERLOG oldLOG
 upload_logs() {
   $BBok && {
-    test_connection
-    [ $? -ne 0 ] && exit
-    verUp=none; oldverUp=none; logUp=none; oldlogUp=none;
+    test_connection || exit
     echo "Uploading logs"
-    [ -s $VERLOG ] && verUp=$(cat $VERLOG | nc termbin.com 9999)
-    [ -s $oldVERLOG ] && oldverUp=$(cat $oldVERLOG | nc termbin.com 9999)
-    [ -s $LOG ] && logUp=$(cat $LOG | nc termbin.com 9999)
-    [ -s $oldLOG ] && oldlogUp=$(cat $oldLOG | nc termbin.com 9999)
+    [ -s $VERLOG ] && verUp=$(cat $VERLOG | nc termbin.com 9999) || verUp=none
+    [ -s $oldVERLOG ] && oldverUp=$(cat $oldVERLOG | nc termbin.com 9999) || oldverUp=none
+    [ -s $LOG ] && logUp=$(cat $LOG | nc termbin.com 9999) || logUp=none
+    [ -s $oldLOG ] && oldlogUp=$(cat $oldLOG | nc termbin.com 9999) || oldlogUp=none
     echo -n "Link: "
     echo "$MODEL ($DEVICE) API $API\n$ROM\n$ID\n
     O_Verbose: $oldverUp
@@ -219,6 +220,17 @@ upload_logs() {
     Log:   $logUp" | nc termbin.com 9999
   } || echo "Busybox not found!"
   exit
+}
+
+# Print Random
+# Prints a message at random
+# CHANCES - no. of chances <integer>
+# TARGET - target value out of CHANCES <integer>
+prandom() {
+  local CHANCES=2
+  local TARGET=2
+  [ "$1" ==  "-c" ] && { local CHANCES=$2; local TARGET=$3; shift 3; }
+  [ "$((RANDOM%CHANCES+1))" -eq "$TARGET" ] && echo "$@"
 }
 
 # Heading
