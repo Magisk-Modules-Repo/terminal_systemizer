@@ -52,6 +52,7 @@ Usage: $_name
    
 Options:
     -nc                    removes ANSI escape codes
+    -f                     use 'Set SELinux' in the session for faster app listing
     -a [package name]      systemizes the package name(s) provided
     -d [apk dir]           systemizes the apk(s) provided
     -l                     list all systemized apps
@@ -75,13 +76,22 @@ RESCAN=true
 MERGEIMG=/data/adb/magisk_merge.img
 use_cmd=false
 se_set=false
+faster_flag=false
 
 # Method
-[ "$(grep_prop selinux $MODDIR/module.prop)" == "true" ] && { use_cmd=true; se_set=true; } || {
+if [ "$1" == "-f" ]; then
+  use_cmd=true
+  se_set=true
+  faster_flag=true
+  shift
+elif [ "$(grep_prop selinux $MODDIR/module.prop)" == "true" ]; then
+  use_cmd=true
+  se_set=true
+else
   [ $(getenforce) == "Permissive" ] && use_cmd=true || {
     [ $LOGNAME ] && use_cmd=true || use_cmd=false
   }
-}
+fi
 method="ls /data/data"
 detect="codePath=$SYSTEM|targetSdk=0|codePath=/vendor/overlay"
 if $use_cmd; then
@@ -466,7 +476,7 @@ set_selinux() {
   echo "$div"
   echo ""
   stat_color=$G
-  se_set="$(grep_prop selinux $MODDIR/module.prop)"
+  $faster_flag || se_set="$(grep_prop selinux $MODDIR/module.prop)"
   [ "$se_set" != true ] && se_set=false && stat_color=$R
   echo " SELinux Status: $(getenforce)"
   echo " Enabled: ${stat_color}$se_set${N}"
@@ -479,7 +489,10 @@ set_selinux() {
   read sechoice
   case "$sechoice" in
     x|X) menu;;
-    c|C) if $se_set; then
+    c|C) if $faster_flag; then
+        echo "Using '-f' (faster) option, changes will not be applied!"
+		exit
+      elif $se_set; then
         set_file_prop selinux false $MODDIR/module.prop
         echo "Set to false"
         echo "Exiting script to apply changes"
@@ -498,7 +511,7 @@ set_selinux() {
 menu() {
   mod_head
   stat_color=$G
-  se_set="$(grep_prop selinux $MODDIR/module.prop)"
+  $faster_flag || se_set="$(grep_prop selinux $MODDIR/module.prop)"
   [ "$se_set" != true ] && se_set=false && stat_color=$R
   echo "Set SELinux Enabled: ${stat_color}$se_set${N}"
   echo "SELinux Status: $(getenforce)"
