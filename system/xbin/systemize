@@ -69,7 +69,7 @@ IFUPDATED=""
 perm_xml1=$SYSTEM/etc/permissions/privapp-permissions-platform.xml
 perm_xml=$MODDIR$SYSTEM2/etc/permissions/privapp-permissions-platform.xml
 [ -f $perm_xml1 ] && patch_xml=true || patch_xml=false
-LISTFILE=/cache/systemize.list
+LISTFILE=$CACHELOC/systemize.list
 BOOTMODE=true
 RESCAN=true
 MERGEIMG=/data/adb/magisk_merge.img
