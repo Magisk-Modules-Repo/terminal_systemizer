@@ -14,15 +14,15 @@ if [ -z $SLOT ]; then
   SLOT=_`grep_cmdline androidboot.slot`
   [ $SLOT = "_" ] && {
     SLOT=
-    isABDevice=true
-    SYSTEM=/system_root/system
-    SYSTEM2=/system
-    CACHELOC=/data/cache
-  } || {
     isABDevice=false
     SYSTEM=/system
     SYSTEM2=/system
     CACHELOC=/cache
+  } || {
+    isABDevice=true
+    SYSTEM=/system_root/system
+    SYSTEM2=/system
+    CACHELOC=/data/cache
   }
 fi
 
