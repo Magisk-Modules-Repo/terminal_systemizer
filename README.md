@@ -20,6 +20,13 @@ or
 
 ## Changelog
 
+### v16
+* Update mod-util
+  * Changes related to Magisk's path changes (will be removed when it's added in stable)
+  * Better A/B detection
+* Add -f option
+  * This uses 'Set SELinux' function directly, and only once
+* Misc improvements
 ### v15.1
 * Update mod-util
   * This contains a fix for the ProgressBar on small devices (with small dpi)
