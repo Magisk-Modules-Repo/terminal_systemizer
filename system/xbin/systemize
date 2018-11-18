@@ -530,7 +530,7 @@ menu() {
   echo " s - Set SELinux"
   prandom " d - ${C}Donate${N}"
   echo " 0 - Exit"
-  prandom " ${R}SUBSCRIBE TO PEWDIEPIE!!!!!!!!!${N}"
+  prandom -c 15 3 " ${R}SUBSCRIBE TO PEWDIEPIE!!!!!!!!!${N}"
   echo ""
   echo -n "[CHOICE]: "
   read choice
