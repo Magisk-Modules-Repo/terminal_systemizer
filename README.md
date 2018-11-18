@@ -20,6 +20,9 @@ or
 
 ## Changelog
 
+### v16.1
+* Update mod-util
+  * Reverted A/B detection
 ### v16
 * Update mod-util
   * Changes related to Magisk's path changes (will be removed when it's added in stable)
