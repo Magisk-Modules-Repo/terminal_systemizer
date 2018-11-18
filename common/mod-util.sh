@@ -5,26 +5,22 @@
 #
 ##########################################################################################
 
-MODUTILVER=v2.2
-MODUTILVCODE=22
+MODUTILVER=v2.3.1
+MODUTILVCODE=231
 
 # Check A/B slot
-SLOT=`grep_cmdline androidboot.slot_suffix`
-if [ -z $SLOT ]; then
-  SLOT=_`grep_cmdline androidboot.slot`
-  [ $SLOT = "_" ] && {
-    SLOT=
-    isABDevice=false
-    SYSTEM=/system
-    SYSTEM2=/system
-    CACHELOC=/cache
-  } || {
-    isABDevice=true
-    SYSTEM=/system_root/system
-    SYSTEM2=/system
-    CACHELOC=/data/cache
-  }
+if [ -d /system_root ]; then
+  isABDevice=true
+  SYSTEM=/system_root/system
+  SYSTEM2=/system
+  CACHELOC=/data/cache
+else
+  isABDevice=false
+  SYSTEM=/system
+  SYSTEM2=/system
+  CACHELOC=/cache
 fi
+[ -z "$isABDevice" ] && { echo "Something went wrong!"; exit 1; }
 
 #=========================== Set Busybox up
 # Variables:
