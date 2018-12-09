@@ -5,8 +5,9 @@
 #
 ##########################################################################################
 
-MODUTILVER=v2.3.1
-MODUTILVCODE=231
+# Versions
+MODUTILVER=v2.4
+MODUTILVCODE=240
 
 # Check A/B slot
 if [ -d /system_root ]; then
@@ -227,6 +228,16 @@ prandom() {
   local TARGET=2
   [ "$1" ==  "-c" ] && { local CHANCES=$2; local TARGET=$3; shift 3; }
   [ "$((RANDOM%CHANCES+1))" -eq "$TARGET" ] && echo "$@"
+}
+
+# Print Center
+# Prints text in the center of terminal
+pcenter() {
+  local CHAR=$(echo $@ | sed 's|\e[[0-9;]*m||g' | wc -m)
+  local hfCOLUMN=$((COLUMNS/2))
+  local hfCHAR=$((CHAR/2))
+  local indent=$((hfCOLUMN-hfCHAR-1))
+  echo "$(printf '%*s' "${indent}" '') $@"
 }
 
 # Heading
