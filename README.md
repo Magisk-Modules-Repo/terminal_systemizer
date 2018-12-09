@@ -20,6 +20,9 @@ or
 
 ## Changelog
 
+### v16.2
+* Update mod-util
+* Support only Magisk v18+!
 ### v16.1
 * Update mod-util
   * Reverted A/B detection
