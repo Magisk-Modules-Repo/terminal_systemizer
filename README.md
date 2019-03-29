@@ -20,6 +20,8 @@ or
 
 ## Changelog
 
+### v17
+* Update module template
 ### v16.2
 * Update mod-util
 * Support only Magisk v18+!
