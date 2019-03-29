@@ -14,7 +14,7 @@ ls /data >/dev/null 2>&1 || { echo "$ID needs to run as root!"; echo "type 'su' 
 [ -f /data/adb/magisk/util_functions.sh ] && . /data/adb/magisk/util_functions.sh || { echo "util_functions.sh not detected!"; exit 1; }
 
 # Magisk Mod Directory
-MOUNTPATH="/sbin/.magisk/img"
+MOUNTPATH="/data/adb/modules"
 MODDIR="$MOUNTPATH/$ID"
 [ ! -d $MODDIR ] && { echo "Module not detected!"; exit 1; }
 
