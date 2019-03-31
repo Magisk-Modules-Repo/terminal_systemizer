@@ -15,6 +15,7 @@ ls /data >/dev/null 2>&1 || { echo "$ID needs to run as root!"; echo "type 'su' 
 
 # Magisk Mod Directory
 MOUNTPATH="/data/adb/modules"
+[ ! -d $MOUNTPATH ] && MOUNTPATH="/sbin/.magisk/img"
 MODDIR="$MOUNTPATH/$ID"
 [ ! -d $MODDIR ] && { echo "Module not detected!"; exit 1; }
 

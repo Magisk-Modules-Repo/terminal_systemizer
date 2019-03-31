@@ -20,6 +20,8 @@ or
 
 ## Changelog
 
+### v17.1
+* Support back Magisk v18
 ### v17
 * Update module template
 ### v16.2
