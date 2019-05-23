@@ -43,16 +43,6 @@ set_busybox() {
   fi
 }
 _busybox=false
-if [ -d /sbin/.core/busybox ]; then
-  PATH=/sbin/.core/busybox:$PATH
-  _bb=/sbin/.core/busybox/busybox
-  _busybox=true
-elif [ ! -x $SYSTEM/xbin/busybox ]; then
-  set_busybox /data/magisk/busybox
-  set_busybox /data/adb/magisk/busybox
-else
-  alias busybox=""
-fi
 if [ $_busybox ]; then
   true
 elif [ -x $SYSTEM/xbin/busybox ]; then
@@ -65,7 +55,6 @@ else
   false
 fi
 [ $? -ne 0 ] && exit $?
-alias echo='echo -e'
 [ -n "$LOGNAME" ] && alias clear='echo'
 _bbname="$($_bb | head -n1 | awk '{print $1,$2}')"
 BBok=true
@@ -75,6 +64,39 @@ if [ "$_bbname" == "" ]; then
 fi
 
 #=========================== Default Functions and Variables
+
+# Set perm
+set_perm() {
+  chown $2:$3 $1 || return 1
+  chmod $4 $1 || return 1
+  [ -z $5 ] && chcon 'u:object_r:system_file:s0' $1 || chcon $5 $1 || return 1
+}
+
+# Set perm recursive
+set_perm_recursive() {
+  find $1 -type d 2>/dev/null | while read dir; do
+    set_perm $dir $2 $3 $4 $6
+  done
+  find $1 -type f -o -type l 2>/dev/null | while read file; do
+    set_perm $file $2 $3 $5 $6
+  done
+}
+
+# Mktouch
+mktouch() {
+  mkdir -p ${1%/*} 2>/dev/null
+  [ -z $2 ] && touch $1 || echo $2 > $1
+  chmod 644 $1
+}
+
+# Grep prop
+grep_prop() {
+  local REGEX="s/^$1=//p"
+  shift
+  local FILES=$@
+  [ -z "$FILES" ] && FILES='/system/build.prop'
+  sed -n "$REGEX" $FILES 2>/dev/null | head -n 1
+}
 
 # Device Info
 # Variables: BRAND MODEL DEVICE API ABI ABI2 ABILONG ARCH
@@ -129,7 +151,7 @@ title_div() {
 # set_file_prop <property> <value> <prop.file>
 set_file_prop() {
   if [ -f "$3" ]; then
-    if grep "$1=" "$3"; then
+    if grep -q "$1=" "$3"; then
       sed -i "s/${1}=.*/${1}=${2}/g" "$3"
     else
       echo "$1=$2" >> "$3"
@@ -233,10 +255,10 @@ prandom() {
 # Print Center
 # Prints text in the center of terminal
 pcenter() {
-  local CHAR=$(echo $@ | sed 's|\e[[0-9;]*m||g' | wc -m)
+  local CHAR=$(printf "$@" | sed 's|\\e[[0-9;]*m||g' | wc -m)
   local hfCOLUMN=$((COLUMNS/2))
   local hfCHAR=$((CHAR/2))
-  local indent=$((hfCOLUMN-hfCHAR-1))
+  local indent=$((hfCOLUMN-hfCHAR))
   echo "$(printf '%*s' "${indent}" '') $@"
 }
 
