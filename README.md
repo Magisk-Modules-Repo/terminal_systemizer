@@ -20,6 +20,8 @@ or
 
 ## Changelog
 
+### v17.2
+* Updated mod-util
 ### v17.1
 * Support back Magisk v18
 ### v17
