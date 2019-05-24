@@ -73,6 +73,7 @@ MERGEIMG=/data/adb/magisk_merge.img
 use_cmd=false
 se_set=false
 faster_flag=false
+[ -d $SYSTEM2/build.prop ] && SYSTEM=$SYSTEM2
 
 # Method
 if [ "$1" == "-f" ]; then
