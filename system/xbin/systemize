@@ -73,7 +73,7 @@ MERGEIMG=/data/adb/magisk_merge.img
 use_cmd=false
 se_set=false
 faster_flag=false
-[ -d $SYSTEM2/build.prop ] && SYSTEM=$SYSTEM2
+[ -f $SYSTEM2/build.prop ] && SYSTEM=$SYSTEM2
 
 # Method
 if [ "$1" == "-f" ]; then
@@ -451,7 +451,7 @@ revert_apps() {
     else
       echo "Reverting ${rev_app[i]}..." | tr '_' ' '
       rm -rf ${rev_dir[i]}
-      rm -rf $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${rev_label[i]}.xml >>$LOG 2>$1
+      rm -rf $MODDIR$SYSTEM2/etc/permissions/privapp-permissions-${rev_label[i]}.xml >>$LOG 2>&1
     fi
   done
   echo "Reboot to apply changes"
