@@ -104,8 +104,18 @@ BRAND=$(getprop ro.product.brand)
 MODEL=$(getprop ro.product.model)
 DEVICE=$(getprop ro.product.device)
 ROM=$(getprop ro.build.display.id)
-api_level_arch_detect
-
+API=`grep_prop ro.build.version.sdk`
+ABI=`grep_prop ro.product.cpu.abi | cut -c-3`
+ABI2=`grep_prop ro.product.cpu.abi2 | cut -c-3`
+ABILONG=`grep_prop ro.product.cpu.abi`
+ARCH=arm
+ARCH32=arm
+IS64BIT=false
+if [ "$ABI" = "x86" ]; then ARCH=x86; ARCH32=x86; fi;
+if [ "$ABI2" = "x86" ]; then ARCH=x86; ARCH32=x86; fi;
+if [ "$ABILONG" = "arm64-v8a" ]; then ARCH=arm64; ARCH32=arm; IS64BIT=true; fi;
+if [ "$ABILONG" = "x86_64" ]; then ARCH=x64; ARCH32=x86; IS64BIT=true; fi;
+  
 # Version Number
 VER=$(grep_prop version $MODDIR/module.prop)
 # Version Code
