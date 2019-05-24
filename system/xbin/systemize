@@ -339,7 +339,7 @@ chk_apk_size() {
   apk_sizeM="$(du -m $dir_app | awk '{print $1}')"
   [ -d ${dir_app%/*}/lib ] && apk_sizeM="$((apk_sizeM+$(du -ms ${dir_app%/*}/lib | awk '{print $1}')))"
   UNMOUNTIMG=false
-  if [ "$apk_sizeM" -gt "$((free_space-10))" ]; then
+  if [ "$apk_sizeM" -gt "$((free_space-10))" ] && [ "$MOUNTPATH" == "/sbin/.magisk/img" ]; then
     echo " Checking App size - ${W}${apk_sizeM}M${N}"
     echo "- Insufficient $MOUNTPATH space!"
     echo "- APK size: ${apk_sizeM}M | $MOUNTPATH Free: ${free_space}M"
