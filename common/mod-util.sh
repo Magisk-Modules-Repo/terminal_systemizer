@@ -45,15 +45,16 @@ set_busybox() {
 _busybox=false
 if [ $_busybox ]; then
   true
-elif [ -x $SYSTEM/xbin/busybox ]; then
-  _bb=$SYSTEM/xbin/busybox
-elif [ -x $SYSTEM/bin/busybox ]; then
-  _bb=$SYSTEM/bin/busybox
+elif [ -x $SYSTEM2/xbin/busybox ]; then
+  _bb=$SYSTEM2/xbin/busybox
+elif [ -x $SYSTEM2/bin/busybox ]; then
+  _bb=$SYSTEM2/bin/busybox
 else
   echo "! Busybox not detected"
   echo "Please install one (@osm0sis' busybox recommended)"
   false
 fi
+set_busybox $_bb
 [ $? -ne 0 ] && exit $?
 [ -n "$LOGNAME" ] && alias clear='echo'
 _bbname="$($_bb | head -n1 | awk '{print $1,$2}')"
@@ -97,6 +98,13 @@ grep_prop() {
   [ -z "$FILES" ] && FILES='/system/build.prop'
   sed -n "$REGEX" $FILES 2>/dev/null | head -n 1
 }
+
+# Abort
+abort() {
+  echo "$1"
+  exit 1
+}
+
 
 # Device Info
 # Variables: BRAND MODEL DEVICE API ABI ABI2 ABILONG ARCH
