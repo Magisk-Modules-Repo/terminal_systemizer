@@ -20,6 +20,8 @@ or
 
 ## Changelog
 
+### v17.2.2
+* Fix errors systemizing
 ### v17.2
 * Updated mod-util
 ### v17.1
