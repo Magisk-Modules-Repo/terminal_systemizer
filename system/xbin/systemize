@@ -12,7 +12,6 @@ ls /data >/dev/null 2>&1 || { echo "$ID needs to run as root!"; echo "type 'su' 
 
 # Magisk Mod Directory
 MOUNTPATH="/data/adb/modules"
-[ ! -d $MOUNTPATH ] && MOUNTPATH="/sbin/.magisk/img"
 MODDIR="$MOUNTPATH/$ID"
 [ ! -d $MODDIR ] && { echo "Module not detected!"; exit 1; }
 
@@ -23,11 +22,11 @@ MODDIR="$MOUNTPATH/$ID"
 mount -o remount,rw /cache 2>/dev/null
 mount -o rw,remount /cache 2>/dev/null
 # > Logs should go in this file
-LOG=$CACHELOC/$ID.log
-oldLOG=$CACHELOC/$ID-old.log
+LOG=$MODDIR/$ID.log
+oldLOG=$MODDIR/$ID-old.log
 # > Verbose output goes here
-VERLOG=$CACHELOC/$ID-verbose.log
-oldVERLOG=$CACHELOC/$ID-verbose-old.log
+VERLOG=$MODDIR/$ID-verbose.log
+oldVERLOG=$MODDIR/$ID-verbose-old.log
 
 # Start Logging verbosely
 mv -f $VERLOG $oldVERLOG 2>/dev/null; mv -f $LOG $oldLOG 2>/dev/null
