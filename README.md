@@ -20,6 +20,8 @@ or
 
 ## Changelog
 
+### v17.3.1
+* Updated mod-util
 ### v17.3
 * Updated mod-util
 ### v17.2.2
