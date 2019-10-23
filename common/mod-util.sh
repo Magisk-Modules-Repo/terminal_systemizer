@@ -56,7 +56,7 @@ else
 fi
 set_busybox $_bb
 [ $? -ne 0 ] && exit $?
-[ -n "$LOGNAME" ] && alias clear='echo'
+[ -n "$ANDROID_SOCKET_adbd" ] && alias clear='echo'
 _bbname="$($_bb | head -n1 | awk '{print $1,$2}')"
 BBok=true
 if [ "$_bbname" == "" ]; then

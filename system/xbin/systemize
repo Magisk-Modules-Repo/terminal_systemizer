@@ -22,11 +22,11 @@ MODDIR="$MOUNTPATH/$ID"
 mount -o remount,rw /cache 2>/dev/null
 mount -o rw,remount /cache 2>/dev/null
 # > Logs should go in this file
-LOG=$MODDIR/$ID.log
-oldLOG=$MODDIR/$ID-old.log
+LOG=/data/local/tmp/$ID.log
+oldLOG=/data/local/tmp/$ID-old.log
 # > Verbose output goes here
-VERLOG=$MODDIR/$ID-verbose.log
-oldVERLOG=$MODDIR/$ID-verbose-old.log
+VERLOG=/data/local/tmp/$ID-verbose.log
+oldVERLOG=/data/local/tmp/$ID-verbose-old.log
 
 # Start Logging verbosely
 mv -f $VERLOG $oldVERLOG 2>/dev/null; mv -f $LOG $oldLOG 2>/dev/null
