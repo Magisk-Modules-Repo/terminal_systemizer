@@ -85,7 +85,7 @@ elif [ "$(grep_prop selinux $MODDIR/module.prop)" == "true" ]; then
   se_set=true
 else
   [ $(getenforce) == "Permissive" ] && use_cmd=true || {
-    [ $LOGNAME ] && use_cmd=true || use_cmd=false
+    [ $ANDROID_SOCKET_adbd ] && use_cmd=true || use_cmd=false
   }
 fi
 method="ls /data/data"
